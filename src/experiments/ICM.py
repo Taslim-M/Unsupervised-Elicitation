@@ -549,6 +549,45 @@ def main(args):
         
         print("=" * 100)
         iter += 1
+    
+    # Re-score final pool so each labeled item has a 'score'
+    cur_pool = {k: v for k, v in demonstrations.items() if v["label"] is not None}
+    pipeline = get_pipeline(
+        model=args.model,
+        name=name,
+        num_problems=None,
+        iter="final",
+        assignment=cur_pool,
+    )
+    results = asyncio.run(pipeline.run())
+    final_scores = {uid: d["score"] for uid, d in results["get_train_preds"].items()}
+
+    # Attach scores back
+    for uid in cur_pool:
+        demonstrations[uid]["score"] = final_scores.get(uid, None)
+
+    # Save labels to results/<name>/final_labels.jsonl
+    save_dir = get_default_results_directory() / name
+    os.makedirs(save_dir, exist_ok=True)
+    out_path = save_dir / "final_labels.jsonl"
+    with open(out_path, "w") as f:
+        for uid, ex in sorted(demonstrations.items()):
+            f.write(json.dumps({
+                "uid": uid,
+                "consistency_id": ex.get("consistency_id"),
+                "consistency_key": ex.get("consistency_key"),
+                "source": ex.get("source"),
+                "label": ex.get("label"),                # ICM’s final label (0/1 or None)
+                "vanilla_label": ex.get("vanilla_label"),# dataset label if present (for eval)
+                "score": ex.get("score"),                # model True-vs-False logprob diff
+                "question": ex.get("question"),
+                "choice": ex.get("choice"),
+                "choice_2": ex.get("choice_2"),
+                "prompt": ex.get("prompt"),
+                "type": ex.get("type"),
+            }) + "\n")
+
+    print(f"Saved final labels to: {out_path}")
 
 
 if __name__ == "__main__":

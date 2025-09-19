@@ -1,24 +1,15 @@
 ## Unsupervised Elicitation of Language Models
 
-We introduce a new unsupervised algorithm for eliciting skills from pretrained language models. This algorithm is competitive with training on human labels on common misconceptions (TruthfulQA), math (GSM8k-verification), and helpfulness reward modeling (Alpaca). Without supervision, we train a helpful chat assistant from the Haiku 3.5 base model that outperforms a similarly trained human-supervised baseline.
-
-
-<p align="center">
-  <img width="100%" src="figures/llama_performance.png">
-</p>
-
-<p align="center">
-  <img width="100%" src="figures/claude_performance.png">
-</p>
-
-
 ## Setup
 
-### Environment
+### From Source
+```bash
+git clone https://github.com/Taslim-M/Unsupervised-Elicitation
+cd Unsupervised-Elicitation
+conda env create -f env.yaml
+pip install -e .
+```
 
-1. create conda environment: `conda env create -f env.yaml`
-
-2. install package `pip install -e .`
 
 ### API for Pretrained Base Models
 
@@ -45,12 +36,6 @@ Download data from this [link](https://drive.google.com/file/d/1AJdFJO9IHfOnWHyI
 Put it under the `data/` directory.
 
 ## Run
-
-### ICM
-<p align="center">
-  <img width="100%" src="figures/algorithm.png">
-</p>
-
 
 The main script is located in `src/experiments/ICM.py`
 An example command for labeling truthfulQA data:
