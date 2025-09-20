@@ -7,6 +7,7 @@
 git clone https://github.com/Taslim-M/Unsupervised-Elicitation
 cd Unsupervised-Elicitation
 conda env create -f env.yaml
+conda activate UE
 pip install -e .
 ```
 
