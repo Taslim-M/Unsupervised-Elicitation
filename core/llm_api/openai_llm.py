@@ -395,6 +395,7 @@ _GPT_4_MODELS = [
     "minimax/minimax-01",
     "microsoft/phi-4",
     "qwen/qvq-72b-preview",
+    "hugging-quants/Meta-Llama-3.1-70B-Instruct-AWQ-INT4"
 ]
 _GPT_TURBO_MODELS = [
     "gpt-3.5-turbo",
