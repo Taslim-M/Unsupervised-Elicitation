@@ -315,12 +315,16 @@ def get_args():
     parser.add_argument("--initial_T", type=float, default=10)
     parser.add_argument("--final_T", type=float, default=0.01)
     parser.add_argument("--scheduler", type=str, default="log")
+    parser.add_argument("--file_name", type=str, default=None, help="Override the dataset file name in data/ (e.g., train_truthfulqa.json)")
     args = parser.parse_args()
     return args
 
 def load_data(args):
+    file_name = args.file_name
+    data_path = get_root_directory() / "data" / file_name
+    
     if args.testbed == "alpaca":
-        with open(get_root_directory() / "data/train_alpaca.json") as f:
+        with open(data_path) as f:
             train = json.load(f)
         template = """Human: {question}
 Response 1: {choice}
@@ -335,7 +339,7 @@ I think this claim is """
         args.GROUP_SIZE = 2
         
     elif args.testbed == 'gsm8k':
-        with open(get_root_directory() / "data/train_gsm8k.json") as f:
+        with open(data_path) as f:
             train = json.load(f)
         template = """Question: {question}
 Claim: {answer}
@@ -349,7 +353,7 @@ I think this claim is """
         args.GROUP_SIZE = 4
         
     elif args.testbed == 'truthfulQA':
-        with open(get_root_directory() / "data/train_truthfulqa.json") as f:
+        with open(data_path) as f:
             train = json.load(f)
         template = """Question: {question}
 Claim: {answer}
@@ -362,7 +366,7 @@ I think this claim is """
         args.GROUP_SIZE = 4
         
     elif args.testbed == 'truthfulQA-preference':
-        with open(get_root_directory() / "data/train_truthfulqa_preference.json") as f:
+        with open(data_path) as f:
             train = json.load(f)
         template = """Question: {question}
 Answer 1: {choice}
