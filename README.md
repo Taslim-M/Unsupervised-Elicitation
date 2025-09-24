@@ -42,7 +42,7 @@ The main script is located in `src/experiments/ICM.py`
 An example command for labeling truthfulQA data:
 ```
 cd src/experiments
-python ICM.py --testbed truthfulQA --alpha 50
+python ICM.py --testbed truthfulQA --alpha 50 --file_name my_truthfulqa_subset.json --K 500 --model meta-llama/Llama-3.1-8B --batch_size 128
 ```
 
 Arguments:
