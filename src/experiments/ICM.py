@@ -442,7 +442,7 @@ def main(args):
     }
     
     print('init random labels = ', Counter([i['label'] for i in demonstrations.values() if i['type'] == 'seed']), 'init label acc = ', np.mean([i['label'] == i['vanilla_label'] for i in demonstrations.values() if i['type'] == 'seed']))
-    name = f"{args.testbed}-llama70b-K{args.K}-bc{args.batch_size}_seed{args.seed}-initialsize{args.num_seed}-weighted{args.alpha}-decay{args.decay}-initialT{args.initial_T}-finalT{args.final_T}-scheduler{args.scheduler}"
+    name = f"{args.testbed}-llama70b-K{args.K}-bc{args.batch_size}_seed{args.seed}-initialsize{args.num_seed}-weighted{args.alpha}-decay{args.decay}-initialT{args.initial_T}-finalT{args.final_T}-scheduler{args.scheduler}-file{args.file_name}"
 
     iter = 0
     flip_cnt = 0
@@ -571,7 +571,7 @@ def main(args):
         demonstrations[uid]["score"] = final_scores.get(uid, None)
 
     # Save labels to results/<name>/final_labels.jsonl
-    save_dir = get_default_results_directory() / name
+    save_dir = get_root_directory() / name
     os.makedirs(save_dir, exist_ok=True)
     out_path = save_dir / "final_labels.jsonl"
     with open(out_path, "w") as f:
