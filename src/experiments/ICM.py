@@ -316,6 +316,7 @@ def get_args():
     parser.add_argument("--final_T", type=float, default=0.01)
     parser.add_argument("--scheduler", type=str, default="log")
     parser.add_argument("--file_name", type=str, default=None, help="Override the dataset file name in data/ (e.g., train_truthfulqa.json)")
+    parser.add_argument("--use_goldseed", type=int, default=0)
     args = parser.parse_args()
     return args
 
@@ -419,6 +420,10 @@ def initialize(train, fewshot_ids, args):
             item["label"] = None
             item["type"] = "predict"
             unlabeled_ids.append(item["uid"])
+        elif bool(args.use_goldseed): # use gold labels for seed set
+            item["type"] = "seed"
+            item["label"] = item["vanilla_label"] # or leave it unchanged
+            seed_ids.append(item["uid"])
         else: # set random labels
             item["type"] = "seed"
             item["label"] = random_init_labels[id]
@@ -442,7 +447,7 @@ def main(args):
     }
     
     print('init random labels = ', Counter([i['label'] for i in demonstrations.values() if i['type'] == 'seed']), 'init label acc = ', np.mean([i['label'] == i['vanilla_label'] for i in demonstrations.values() if i['type'] == 'seed']))
-    name = f"{args.testbed}-llama70b-K{args.K}-bc{args.batch_size}_seed{args.seed}-initialsize{args.num_seed}-weighted{args.alpha}-decay{args.decay}-initialT{args.initial_T}-finalT{args.final_T}-scheduler{args.scheduler}-file{args.file_name}"
+    name = f"{args.testbed}-llama70b-K{args.K}-bc{args.batch_size}_seed{args.seed}-initialsize{args.num_seed}-weighted{args.alpha}-decay{args.decay}-initialT{args.initial_T}-finalT{args.final_T}-scheduler{args.scheduler}-file{args.file_name}--usegoldseed{args.use_goldseed}"
 
     iter = 0
     flip_cnt = 0
