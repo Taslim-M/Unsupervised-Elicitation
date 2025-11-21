@@ -316,7 +316,8 @@ def get_args():
     parser.add_argument("--final_T", type=float, default=0.01)
     parser.add_argument("--scheduler", type=str, default="log")
     parser.add_argument("--file_name", type=str, default=None, help="Override the dataset file name in data/ (e.g., train_truthfulqa.json)")
-    parser.add_argument("--use_goldseed", type=int, default=0)
+    parser.add_argument("--use_goldseed", type=int, default=0) 
+    parser.add_argument("--continue_from_existing", type=int, default=0)
     args = parser.parse_args()
     return args
 
@@ -416,7 +417,13 @@ def initialize(train, fewshot_ids, args):
         item["vanilla_label"] = item["label"] # store dataset labels to measure agreement during the searching process
         item["uid"] = id
         whole_ids.append(item["uid"])
-        if id >= args.num_seed:  # set labels to None
+        if bool(args.continue_from_existing): # if we want to continue
+            item["label"] = item.get("icm_label", None)
+            item["label_locked"] = item.get("icm_label_locked", False)
+            if id < args.num_seed:
+                item["type"] = "seed"
+                seed_ids.append(item["uid"])
+        elif id >= args.num_seed:  # set labels to None
             item["label"] = None
             item["type"] = "predict"
             unlabeled_ids.append(item["uid"])
@@ -478,7 +485,11 @@ def main(args):
         }
        
         while True: # weighted sampling
-            candidates_ids = whole_ids
+            if(args.continue_from_existing):
+                candidate_ids_unlocked = [i for i in whole_ids if not demonstrations[i]["label_locked"]]
+                candidates_ids = candidate_ids_unlocked
+            else:
+                candidates_ids = whole_ids
             weights = [1 for _ in range(len(candidates_ids))]
             for i in candidates_ids:
                 if i in cur_pool:
