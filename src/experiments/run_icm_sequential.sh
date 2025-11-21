@@ -40,9 +40,9 @@ for f in "${files[@]}"; do
 
     # Print success or failure
     if [ $? -eq 0 ]; then
-        echo "✅ [$count/$total] Completed: $f"
+        echo "[$count/$total] Completed: $f"
     else
-        echo "❌ [$count/$total] Failed: $f"
+        echo "[$count/$total] Failed: $f"
     fi
 
     echo "--------------------------------------"
