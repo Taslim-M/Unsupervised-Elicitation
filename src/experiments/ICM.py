@@ -423,6 +423,10 @@ def initialize(train, fewshot_ids, args):
             if id < args.num_seed:
                 item["type"] = "seed"
                 seed_ids.append(item["uid"])
+            else:
+                item["type"] = "predict"
+                if item.get("icm_label", None) is None:
+                    unlabeled_ids.append(item["uid"])
         elif id >= args.num_seed:  # set labels to None
             item["label"] = None
             item["type"] = "predict"
