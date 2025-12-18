@@ -318,6 +318,7 @@ def get_args():
     parser.add_argument("--file_name", type=str, default=None, help="Override the dataset file name in data/ (e.g., train_truthfulqa.json)")
     parser.add_argument("--use_goldseed", type=int, default=0) 
     parser.add_argument("--continue_from_existing", type=int, default=0)
+    parser.add_argument("--use_interactive_restart", type=int, default=0)
     args = parser.parse_args()
     return args
 
@@ -427,6 +428,20 @@ def initialize(train, fewshot_ids, args):
                 item["type"] = "predict"
                 if item.get("icm_label", None) is None:
                     unlabeled_ids.append(item["uid"])
+        elif bool(args.use_interactive_restart): # restart icm from interacitive labels (selected on confidence)
+            if item.get("icm_label", None) is not None:
+                item["label"] = item.get("icm_label", None)
+                item["type"] = "seed"
+                seed_ids.append(item["uid"])
+            elif id < args.num_seed:
+                item["type"] = "seed"
+                item["label"] = random_init_labels[id]
+                seed_ids.append(item["uid"])
+            else:
+                item["label"] = None
+                item["type"] = "predict"
+                unlabeled_ids.append(item["uid"])
+     
         elif id >= args.num_seed:  # set labels to None
             item["label"] = None
             item["type"] = "predict"
