@@ -591,20 +591,28 @@ def main(args):
     
     # Re-score final pool so each labeled item has a 'score'
     cur_pool = {k: v for k, v in demonstrations.items() if v["label"] is not None}
-    pipeline = get_pipeline(
-        model=args.model,
-        name=name,
-        num_problems=None,
-        iter="final",
-        assignment=cur_pool,
-    )
+    pipeline = get_pipeline(model=args.model, name=name, num_problems=None, iter="final", assignment=cur_pool)
     results = asyncio.run(pipeline.run())
-    final_scores = {uid: d["score"] for uid, d in results["get_train_preds"].items()}
-
-    # Attach scores back
-    for uid in cur_pool:
-        demonstrations[uid]["score"] = final_scores.get(uid, None)
-
+    
+    preds = results["get_train_preds"]
+    
+    # Build a robust uid->score map
+    final_scores = {}
+    for k, d in preds.items():
+        # Preferred: use the uid stored in metadata (always present)
+        meta_uid = d.get("metadata", {}).get("uid", None)
+        if meta_uid is None:
+            # Fallback: handle keys like "123-0" by stripping the suffix
+            try:
+                meta_uid = int(str(k).split("-")[0])
+            except Exception:
+                continue
+        final_scores[int(meta_uid)] = d.get("score", None)
+    
+    # Attach scores back by integer uid
+    for uid in cur_pool.keys():
+        demonstrations[uid]["score"] = final_scores.get(int(uid), None)
+        
     # Save labels to results/<name>/final_labels.jsonl
     save_dir = get_root_directory() / name
     os.makedirs(save_dir, exist_ok=True)
