@@ -132,7 +132,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-SECRETS
 data/
 .DS_Store
 pyrightconfig.json
