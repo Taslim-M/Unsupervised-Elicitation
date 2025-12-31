@@ -29,7 +29,7 @@ for f in "${files[@]}"; do
     # Run command quietly
     python ICM.py \
         --testbed truthfulQA \
-        --alpha 70 \
+        --alpha 50 \
         --K 500 \
         --model meta-llama/Llama-3.1-8B \
         --num_seed 8 \
