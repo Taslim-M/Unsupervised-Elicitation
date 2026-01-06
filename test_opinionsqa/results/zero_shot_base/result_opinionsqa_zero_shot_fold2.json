@@ -1,0 +1,452 @@
+[
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Do you think men and women are basically similar or basically different when it comes to the things they are good at in the workplace?\nClaim: The majority of independent (no party affiliation) respondents would answer this question as: 'Men and women are basically similar'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "True"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Do you think men and women are basically similar or basically different when it comes to the things they are good at in the workplace?\nClaim: The majority of independent (no party affiliation) respondents would answer this question as: 'Men and women are basically different'\nI think this claim is ",
+    "output": "False",
+    "generated_output": "True"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Would you say the following was a reason or was not a reason why there were guns in your household when you were growing up? For sport shooting, including target shooting and trap and skeet\nClaim: The majority of independent (no party affiliation) respondents would answer this question as: 'Yes, was a reason'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Would you say the following was a reason or was not a reason why there were guns in your household when you were growing up? For sport shooting, including target shooting and trap and skeet\nClaim: The majority of independent (no party affiliation) respondents would answer this question as: 'No, was not a reason'\nI think this claim is ",
+    "output": "False",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Which of the following statements best describes how you feel, even if neither is exactly right?\nClaim: The majority of independent (no party affiliation) respondents would answer this question as: 'If businesses can receive better work at lower cost by replacing humans with robots and computers, they are justified'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Which of the following statements best describes how you feel, even if neither is exactly right?\nClaim: The majority of independent (no party affiliation) respondents would answer this question as: 'There should be limits on how many jobs businesses can replace with robots and computers, even if they can do those'\nI think this claim is ",
+    "output": "False",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Please choose the statement that comes closer to your own views.\nClaim: The majority of independent (no party affiliation) respondents would answer this question as: 'Religion should be kept separate from government policies'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "True"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Please choose the statement that comes closer to your own views.\nClaim: The majority of independent (no party affiliation) respondents would answer this question as: 'Government policies should support religious values and beliefs'\nI think this claim is ",
+    "output": "False",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Do you think men and women are basically similar or basically different when it comes to how they express their feelings?\nClaim: The majority of Republicans would answer this question as: 'Men and women are basically similar'\nI think this claim is ",
+    "output": "False",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Do you think men and women are basically similar or basically different when it comes to how they express their feelings?\nClaim: The majority of Republicans would answer this question as: 'Men and women are basically different'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Do you think science has had a mostly positive or mostly negative effect on the quality of the environment in the U.S.?\nClaim: The majority of Republicans would answer this question as: 'Mostly positive'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Do you think science has had a mostly positive or mostly negative effect on the quality of the environment in the U.S.?\nClaim: The majority of Republicans would answer this question as: 'Mostly negative'\nI think this claim is ",
+    "output": "False",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Which of these statements comes closer to your own view, even if neither is exactly right?\nClaim: The majority of Republicans would answer this question as: 'Scientists make judgments based solely on the facts'\nI think this claim is ",
+    "output": "False",
+    "generated_output": "True"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Which of these statements comes closer to your own view, even if neither is exactly right?\nClaim: The majority of Republicans would answer this question as: 'Scientists' judgments are just as likely to be biased as other people's'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Would you prefer to live in a community where the houses are\nClaim: The majority of Republicans would answer this question as: 'Larger and farther apart, but schools, stores, and restaurants are several miles away'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Would you prefer to live in a community where the houses are\nClaim: The majority of Republicans would answer this question as: 'Smaller and closer to each other, but schools, stores, and restaurants are within walking distance'\nI think this claim is ",
+    "output": "False",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Do you think men and women are basically similar or basically different when it comes to their hobbies and personal interests?\nClaim: The majority of Republicans would answer this question as: 'Men and women are basically similar'\nI think this claim is ",
+    "output": "False",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Do you think men and women are basically similar or basically different when it comes to their hobbies and personal interests?\nClaim: The majority of Republicans would answer this question as: 'Men and women are basically different'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Regardless of whether or not you own a gun, have you ever fired a gun?\nClaim: The majority of Republicans would answer this question as: 'Yes, I have fired a gun'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Regardless of whether or not you own a gun, have you ever fired a gun?\nClaim: The majority of Republicans would answer this question as: 'No, I have never fired a gun'\nI think this claim is ",
+    "output": "False",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Do you have a voice-controlled smart speaker in your home, such as an Amazon Echo or a Google Home?\nClaim: The majority of Republicans would answer this question as: 'Yes'\nI think this claim is ",
+    "output": "False",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Do you have a voice-controlled smart speaker in your home, such as an Amazon Echo or a Google Home?\nClaim: The majority of Republicans would answer this question as: 'No'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Which statement comes closer to your own views?\nClaim: The majority of Democrats would answer this question as: 'Government should do more to solve problems'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "True"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Which statement comes closer to your own views?\nClaim: The majority of Democrats would answer this question as: 'Government is doing too many things better left to businesses and individuals'\nI think this claim is ",
+    "output": "False",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Still thinking ahead 30 years, which do you think is more likely to happen in the U.S.? The gap between the rich and the poor will grow/get smaller\nClaim: The majority of Democrats would answer this question as: 'The gap between the rich and the poor will grow'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Still thinking ahead 30 years, which do you think is more likely to happen in the U.S.? The gap between the rich and the poor will grow/get smaller\nClaim: The majority of Democrats would answer this question as: 'The gap between the rich and the poor will get smaller'\nI think this claim is ",
+    "output": "False",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Which statement comes closer to your views, even if neither is exactly right?\nClaim: The majority of Democrats would answer this question as: 'Whether someone is a man or a woman is determined by the sex they were assigned at birth'\nI think this claim is ",
+    "output": "False",
+    "generated_output": "True"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Which statement comes closer to your views, even if neither is exactly right?\nClaim: The majority of Democrats would answer this question as: 'Someone can be a man or a woman even if that is different from the sex they were assigned at birth'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "True"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Please choose the statement that comes closer to your own views.\nClaim: The majority of Democrats would answer this question as: 'Business corporations make too much profit'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Please choose the statement that comes closer to your own views.\nClaim: The majority of Democrats would answer this question as: 'Most corporations make a fair and reasonable amount of profit'\nI think this claim is ",
+    "output": "False",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Please choose the statement that comes closer to your own views.\nClaim: The majority of Democrats would answer this question as: 'Government aid to the poor does more harm than good, by making people too dependent on government assistance'\nI think this claim is ",
+    "output": "False",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Please choose the statement that comes closer to your own views.\nClaim: The majority of Democrats would answer this question as: 'Government aid to the poor does more good than harm, because people can't get out of poverty until their basic needs are'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Do you think Health insurance is something the federal government has a responsibility to provide for all Americans?\nClaim: The majority of Democrats would answer this question as: 'Yes, a responsibility of the federal government to provide for all Americans'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "True"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Do you think Health insurance is something the federal government has a responsibility to provide for all Americans?\nClaim: The majority of Democrats would answer this question as: 'No, not the responsibility of the federal government to provide'\nI think this claim is ",
+    "output": "False",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Which statement comes closer to your own views?\nClaim: The majority of Democrats would answer this question as: 'There are some situations in which abortion should be restricted'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "True"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Which statement comes closer to your own views?\nClaim: The majority of Democrats would answer this question as: 'There are no situations at all where abortion should be restricted'\nI think this claim is ",
+    "output": "False",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Would you, personally, want to ride in a driverless vehicle if you had the opportunity?\nClaim: The majority of Democrats would answer this question as: 'Yes'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Would you, personally, want to ride in a driverless vehicle if you had the opportunity?\nClaim: The majority of Democrats would answer this question as: 'No'\nI think this claim is ",
+    "output": "False",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Some people think that by criticizing leaders, news organizations keep political leaders from doing their job. Others think that such criticism is worth it because it keeps political leaders from doing things that should not be done. Which position is closer to your opinion?\nClaim: The majority of Democrats would answer this question as: 'Keep political leaders from doing their job'\nI think this claim is ",
+    "output": "False",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Some people think that by criticizing leaders, news organizations keep political leaders from doing their job. Others think that such criticism is worth it because it keeps political leaders from doing things that should not be done. Which position is closer to your opinion?\nClaim: The majority of Democrats would answer this question as: 'Keep political leaders from doing things that shouldn't be done'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: If robots and computers perform most of the jobs currently being done by humans, do you think it is likely or not that inequality between the rich and the poor would increase\nClaim: The majority of Democrats would answer this question as: 'Yes, likely'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: If robots and computers perform most of the jobs currently being done by humans, do you think it is likely or not that inequality between the rich and the poor would increase\nClaim: The majority of Democrats would answer this question as: 'No, not likely'\nI think this claim is ",
+    "output": "False",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Are churches and religious organizations having a positive or negative effect on the way things are going in the country these days?\nClaim: The majority of Democrats would answer this question as: 'Positive effect'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Are churches and religious organizations having a positive or negative effect on the way things are going in the country these days?\nClaim: The majority of Democrats would answer this question as: 'Negative effect'\nI think this claim is ",
+    "output": "False",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Do you think that all Americans should have the right to have the following data about themselves be permanently deleted by the people or organizations who have that information? Potentially embarrassing photos or videos\nClaim: The majority of Democrats would answer this question as: 'Yes, should have the right to have this deleted'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Do you think that all Americans should have the right to have the following data about themselves be permanently deleted by the people or organizations who have that information? Potentially embarrassing photos or videos\nClaim: The majority of Democrats would answer this question as: 'No, should not have  the right to have this deleted'\nI think this claim is ",
+    "output": "False",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Which of these two statements comes closer to your own view, even if neither is exactly right?\nClaim: The majority of Democrats would answer this question as: 'As more women move into management roles, it is only a matter of time before there are as many women as men in top execu'\nI think this claim is ",
+    "output": "False",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Which of these two statements comes closer to your own view, even if neither is exactly right?\nClaim: The majority of Democrats would answer this question as: 'Even as more women move into management roles, men will continue to hold more top executive positions in business in the'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Are you currently a member of a gun or shooting club or gun range\nClaim: The majority of Democrats would answer this question as: 'Yes'\nI think this claim is ",
+    "output": "False",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Are you currently a member of a gun or shooting club or gun range\nClaim: The majority of Democrats would answer this question as: 'No'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Have you ever hidden, blocked, or stopped following someone you know on social media because you thought they were posting made-up news and information?\nClaim: The majority of Democrats would answer this question as: 'Yes, have done this'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Have you ever hidden, blocked, or stopped following someone you know on social media because you thought they were posting made-up news and information?\nClaim: The majority of Democrats would answer this question as: 'No, have not done this'\nI think this claim is ",
+    "output": "False",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Thinking now about medicine which of these statements comes closer to your point of view, even if neither is exactly right?\nClaim: The majority of Democrats would answer this question as: 'Medical treatments these days are worth the costs because they allow people to live longer and better quality lives'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Thinking now about medicine which of these statements comes closer to your point of view, even if neither is exactly right?\nClaim: The majority of Democrats would answer this question as: 'Medical treatments these days often create as many problems as they solve'\nI think this claim is ",
+    "output": "False",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Do you think it's a good thing or a bad thing that most people in our society look down on women who are womanly or feminine?\nClaim: The majority of Democrats would answer this question as: 'Good thing'\nI think this claim is ",
+    "output": "False",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Do you think it's a good thing or a bad thing that most people in our society look down on women who are womanly or feminine?\nClaim: The majority of Democrats would answer this question as: 'Bad thing'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: If driverless vehicles become widespread, which of the following do you think are likely to happen as a result? Most people would never learn how to drive a car on their own\nClaim: The majority of Democrats would answer this question as: 'Yes, likely'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: If driverless vehicles become widespread, which of the following do you think are likely to happen as a result? Most people would never learn how to drive a car on their own\nClaim: The majority of Democrats would answer this question as: 'No, not likely'\nI think this claim is ",
+    "output": "False",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Even if you are not sure, from what you have heard or read, which of these statements about the development of human life on Earth comes closest to what most biological scientists say?\nClaim: The majority of Democrats would answer this question as: 'Humans have evolved over time due to processes such as natural selection'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Are banks and other financial institutions having a positive or negative effect on the way things are going in the country these days?\nClaim: The majority of Democrats would answer this question as: 'Positive effect'\nI think this claim is ",
+    "output": "False",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Are banks and other financial institutions having a positive or negative effect on the way things are going in the country these days?\nClaim: The majority of Democrats would answer this question as: 'Negative effect'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "True"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Thinking again about colleges and universities which of the following do you think should be more important on college campuses these days?\nClaim: The majority of Democrats would answer this question as: 'Allowing people to speak their minds freely, even if some students find their views upsetting or offensive'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "True"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Thinking again about colleges and universities which of the following do you think should be more important on college campuses these days?\nClaim: The majority of Democrats would answer this question as: 'Ensuring that students aren't exposed to views they find upsetting or offensive, even if that limits what people are a'\nI think this claim is ",
+    "output": "False",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Thinking about the US as a whole, do you think this country is now\nClaim: The majority of Democrats would answer this question as: 'More united than before the coronavirus outbreak'\nI think this claim is ",
+    "output": "False",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Thinking about the US as a whole, do you think this country is now\nClaim: The majority of Democrats would answer this question as: 'More divided than before the coronavirus outbreak'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: In order to address economic inequality in this country, do you think the government\nClaim: The majority of Democrats would answer this question as: 'Should raise taxes on the wealthiest Americans'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: In order to address economic inequality in this country, do you think the government\nClaim: The majority of Democrats would answer this question as: 'Should not raise taxes on the wealthiest Americans'\nI think this claim is ",
+    "output": "False",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Do you use twitter?\nClaim: The majority of Democrats would answer this question as: 'Yes, use this'\nI think this claim is ",
+    "output": "False",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Do you use twitter?\nClaim: The majority of Democrats would answer this question as: 'No, do not use this'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Do you think that all Americans should have the right to have information about their employment history or work record removed from public online search results?\nClaim: The majority of Democrats would answer this question as: 'Yes, should be able to remove this from online searches'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Do you think that all Americans should have the right to have information about their employment history or work record removed from public online search results?\nClaim: The majority of Democrats would answer this question as: 'No, should not be able to remove this from online searches'\nI think this claim is ",
+    "output": "False",
+    "generated_output": "False"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Are labor unions having a positive or negative effect on the way things are going in the country these days?\nClaim: The majority of Democrats would answer this question as: 'Positive effect'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "True"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Are labor unions having a positive or negative effect on the way things are going in the country these days?\nClaim: The majority of Democrats would answer this question as: 'Negative effect'\nI think this claim is ",
+    "output": "False",
+    "generated_output": "True"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Do you think science has had a mostly positive or mostly negative effect on the quality of food in the U.S.?\nClaim: The majority of Democrats would answer this question as: 'Mostly positive'\nI think this claim is ",
+    "output": "True",
+    "generated_output": "True"
+  },
+  {
+    "instruction": "Label the input claim as True or False",
+    "input": "Question: Do you think science has had a mostly positive or mostly negative effect on the quality of food in the U.S.?\nClaim: The majority of Democrats would answer this question as: 'Mostly negative'\nI think this claim is ",
+    "output": "False",
+    "generated_output": "False"
+  }
+]
