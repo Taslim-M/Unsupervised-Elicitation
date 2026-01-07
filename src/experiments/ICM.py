@@ -420,9 +420,11 @@ def initialize(train, fewshot_ids, args):
         whole_ids.append(item["uid"])
         if bool(args.continue_from_existing): # if we want to continue
             item["label"] = item.get("icm_label", None)
-            item["label_locked"] = item.get("icm_label_locked", False)
+            # item["label_locked"] = item.get("icm_label_locked", False)
             if id < args.num_seed:
                 item["type"] = "seed"
+                if item.get("icm_label", None) is None:
+                    item["label"] = random_init_labels[id]
                 seed_ids.append(item["uid"])
             else:
                 item["type"] = "predict"
@@ -504,11 +506,11 @@ def main(args):
         }
        
         while True: # weighted sampling
-            if(args.continue_from_existing):
-                candidate_ids_unlocked = [i for i in whole_ids if not demonstrations[i]["label_locked"]]
-                candidates_ids = candidate_ids_unlocked
-            else:
-                candidates_ids = whole_ids
+            # if(args.continue_from_existing):
+            #     candidate_ids_unlocked = [i for i in whole_ids if not demonstrations[i]["label_locked"]]
+            #     candidates_ids = candidate_ids_unlocked
+            # else:
+            candidates_ids = whole_ids
             weights = [1 for _ in range(len(candidates_ids))]
             for i in candidates_ids:
                 if i in cur_pool:
