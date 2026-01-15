@@ -4,13 +4,14 @@ import time
 import re
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
+import math
 
 import requests
 
 BASE_URL = "http://localhost:8000"
 IN_PATH = Path("fold1_test_alpaca.json")
 TRAIN_PATH = Path("fold1_train_icm_alpaca.json")  # NEW: train file
-OUT_PATH = Path("results_alpaca_test.json")
+OUT_PATH = Path("results_icm_few_logs_fold1.json")
 
 # ---------- HTTP helpers ----------
 
@@ -25,6 +26,7 @@ def get_models(base_url: str) -> List[str]:
         print(f"[warn] Could not fetch models: {e}")
         return []
 
+
 def chat_completion(
     base_url: str,
     model: str,
@@ -32,9 +34,9 @@ def chat_completion(
     system_prompt: Optional[str] = None,
     max_tokens: int = 8,
     temperature: float = 0.0,
-    timeout: int = 30
-) -> str:
-    """Call /v1/chat/completions. Returns text."""
+    timeout: int = 30,
+    top_logprobs: int = 5,   # NEW
+) -> Dict[str, Any]:
     messages = []
     if system_prompt:
         messages.append({"role": "system", "content": system_prompt})
@@ -46,11 +48,18 @@ def chat_completion(
         "max_tokens": max_tokens,
         "temperature": temperature,
         "n": 1,
+        "logprobs": True,           # NEW
+        "top_logprobs": top_logprobs,  # NEW
     }
     r = requests.post(f"{base_url}/v1/chat/completions", json=payload, timeout=timeout)
     r.raise_for_status()
     data = r.json()
-    return data["choices"][0]["message"]["content"].strip()
+
+    return {
+        "text": data["choices"][0]["message"]["content"].strip(),
+        "logprobs": data["choices"][0].get("logprobs"),  # NEW (may be None if server doesn't return it)
+    }
+
 
 def completion_fallback(
     base_url: str,
@@ -181,6 +190,40 @@ def generate_for_item(
         temperature=0.0,
     )
 
+def extract_tf_probs(logprobs_obj):
+    """
+    Extract P(True) / P(False) from vLLM-style chat logprobs.
+    Returns dict with probabilities or None if unavailable.
+    """
+    if not logprobs_obj:
+        return None
+
+    content = logprobs_obj.get("content", [])
+    if not content:
+        return None
+
+    # Only the FIRST token matters ("True"/"False")
+    first = content[0]
+    top = first.get("top_logprobs", [])
+
+    tf_logprobs = {}
+
+    for t in top:
+        tok = t["token"].strip()  # handles " True", "\nTrue", etc.
+        if tok == "True":
+            tf_logprobs["True"] = t["logprob"]
+        elif tok == "False":
+            tf_logprobs["False"] = t["logprob"]
+
+    if not tf_logprobs:
+        return None
+
+    # Convert logprobs → normalized probabilities
+    max_lp = max(tf_logprobs.values())
+    exps = {k: math.exp(v - max_lp) for k, v in tf_logprobs.items()}
+    Z = sum(exps.values())
+
+    return {k: v / Z for k, v in exps.items()}
 def main(
     in_path: Path = IN_PATH,
     train_path: Path = TRAIN_PATH,
@@ -230,7 +273,8 @@ def main(
 
         # Generate
         try:
-            gen = generate_for_item(base_url, model, instruction, input_text, fewshot_text)
+            resp = generate_for_item(base_url, model, instruction, input_text, fewshot_text)
+            gen = resp["text"]
             gen_clean = gen.strip().split()[0]
             if gen_clean.lower().startswith("true"):
                 gen_clean = "True"
@@ -250,6 +294,10 @@ def main(
         # (Optionally include bookkeeping for analysis)
         new_item["_fewshot_country"] = test_country
         new_item["_fewshot_count"] = len(shots)
+        tf_probs = extract_tf_probs(resp.get("logprobs"))
+        if tf_probs:
+            pred = max(tf_probs, key=tf_probs.get)
+            new_item["pred_confidence"] = tf_probs[pred]
         results.append(new_item)
 
         time.sleep(0.01)
