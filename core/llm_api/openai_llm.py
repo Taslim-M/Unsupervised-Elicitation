@@ -516,6 +516,10 @@ class OpenAIChatModel(OpenAIModel):
 BASE_MODELS = {
     "meta-llama/Llama-3.1-8B",
     "meta-llama/Llama-3.1-70B",
+    "llama70b-gpu0",
+    "llama70b-gpu1",
+    "llama70b-gpu2",
+    "llama70b-gpu3",
 }
 
 

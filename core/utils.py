@@ -92,7 +92,12 @@ def load_secrets(
             secrets[key] = value
 
     openai.api_key = secrets[openai_tag]
-    os.environ['LLAMA_API_BASE'] = secrets['LLAMA_API_BASE']
+
+    # Prefer an explicitly provided environment variable so multiple concurrent
+    # runs can point at different local vLLM instances without editing SECRETS.
+    # SECRETS acts as a default fallback.
+    if not os.environ.get("LLAMA_API_BASE"):
+        os.environ["LLAMA_API_BASE"] = secrets["LLAMA_API_BASE"]
     # replicate.api_token = secrets[replicate_tag]
     # os.environ["ANTHROPIC_API_KEY"] = secrets[anthropic_tag]
     # os.environ["MISTRAL_API_KEY"] = secrets[mistral_tag]

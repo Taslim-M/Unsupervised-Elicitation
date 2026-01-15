@@ -9,6 +9,9 @@ cd Unsupervised-Elicitation
 conda env create -f env.yaml
 conda activate UE
 pip install -e .
+pip install vllm bitsandbytes
+
+huggingface-cli download yidingp/icm_OpinionQA --repo-type dataset --local-dir ./data --local-dir-use-symlinks False
 ```
 
 
@@ -20,10 +23,74 @@ Since most public api servers (e.g. openrouter) only support post-trained chat m
 
 In particular, we highly recommend activating the `prefix caching` feature to accelerate the experiments, because our algorithm will create many API queries with similar prefixes.
 
+```bash
+CUDA_VISIBLE_DEVICES=0 python -m vllm.entrypoints.openai.api_server \
+  --model meta-llama/Llama-3.1-70B \
+  --served-model-name llama70b-gpu0 \
+  --quantization bitsandbytes \
+  --load-format bitsandbytes \
+  --dtype bfloat16 \
+  --gpu-memory-utilization 0.92 \
+  --host 0.0.0.0 \
+  --port 8000
+```
+```bash
+CUDA_VISIBLE_DEVICES=1 python -m vllm.entrypoints.openai.api_server \
+  --model meta-llama/Llama-3.1-70B \
+  --served-model-name llama70b-gpu1 \
+  --quantization bitsandbytes \
+  --load-format bitsandbytes \
+  --dtype bfloat16 \
+  --gpu-memory-utilization 0.92 \
+  --host 0.0.0.0 \
+  --port 8001
+```
+```bash
+CUDA_VISIBLE_DEVICES=2 python -m vllm.entrypoints.openai.api_server \
+  --model meta-llama/Llama-3.1-70B \
+  --served-model-name llama70b-gpu2 \
+  --quantization bitsandbytes \
+  --load-format bitsandbytes \
+  --dtype bfloat16 \
+  --gpu-memory-utilization 0.92 \
+  --host 0.0.0.0 \
+  --port 8002
+```
+```bash
+CUDA_VISIBLE_DEVICES=3 python -m vllm.entrypoints.openai.api_server \
+  --model meta-llama/Llama-3.1-70B \
+  --served-model-name llama70b-gpu3 \
+  --quantization bitsandbytes \
+  --load-format bitsandbytes \
+  --dtype bfloat16 \
+  --gpu-memory-utilization 0.92 \
+  --host 0.0.0.0 \
+  --port 8003
+```
 
 ### Secrets
 
+If you set `LLAMA_API_BASE` in your shell environment (e.g. `export LLAMA_API_BASE=http://127.0.0.1:8001/v1`), it will override the value loaded from `SECRETS`. This is useful when running multiple vLLM instances on different ports.
+
 You should create a file called SECRETS at the root of the repository with the following contents:
+```bash
+export LLAMA_API_BASE="http://127.0.0.1:8000/v1"
+python src/experiments/ICM.py ...  # 项目1
+```
+
+```bash
+export LLAMA_API_BASE="http://127.0.0.1:8001/v1"
+python src/experiments/ICM.py ...  # 项目2
+```
+
+```bash
+python ICM.py --testbed OpinionQA --alpha 50 --file_name preferences_POLPARTY_binary_noRefused_Democrat_part2of4.json  --K 500 --model llama70b-gpu0 --batch_size 128
+```
+
+```bash
+python ICM.py --testbed OpinionQA --alpha 50 --file_name preferences_POLPARTY_binary_noRefused_Republican_part1of4.json  --K 500 --model meta-llama/Llama-3.1-70B --batch_size 128
+```
+
 ```
 LLAMA_API_BASE=<your_api_base_url>
 NYU_ORG=None

@@ -77,6 +77,18 @@ def pick_two_inconsistent_claims(data):
 
     inconsistent_pairs = {}
     for group in consistency_groups.values():
+        if "consistency_key" not in group[0]:
+            for i in range(len(group)):
+                for j in range(i + 1, len(group)):
+                    if group[i]["label"] == group[j]["label"]:
+                        inconsistent_pairs[len(inconsistent_pairs)] = {
+                            "claim_1": group[i],
+                            "claim_2": group[j],
+                            "consistency_id": group[i]["consistency_id"],
+                            "type": "contradiction",
+                        }
+            continue
+
         labels = [claim["vanilla_label"] for claim in group]
         for i in range(len(group)):
             for j in range(i + 1, len(group)):
