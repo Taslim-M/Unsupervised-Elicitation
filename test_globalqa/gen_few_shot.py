@@ -35,7 +35,7 @@ def chat_completion(
     max_tokens: int = 8,
     temperature: float = 0.0,
     timeout: int = 30,
-    top_logprobs: int = 5,   # NEW
+    top_logprobs: int = 5,   
 ) -> Dict[str, Any]:
     messages = []
     if system_prompt:
@@ -48,8 +48,8 @@ def chat_completion(
         "max_tokens": max_tokens,
         "temperature": temperature,
         "n": 1,
-        "logprobs": True,           # NEW
-        "top_logprobs": top_logprobs,  # NEW
+        "logprobs": True,           
+        "top_logprobs": top_logprobs,  
     }
     r = requests.post(f"{base_url}/v1/chat/completions", json=payload, timeout=timeout)
     r.raise_for_status()
