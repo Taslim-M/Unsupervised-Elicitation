@@ -3,7 +3,7 @@ import sys
 import time
 from pathlib import Path
 from typing import List, Dict, Any, Optional
-
+import math
 import requests
 
 
@@ -51,26 +51,42 @@ def chat_completion(
     data = r.json()
     return data["choices"][0]["message"]["content"].strip()
 
-def completion_fallback(
-    base_url: str,
-    model: str,
-    prompt: str,
-    max_tokens: int = 8,
-    temperature: float = 0.0,
-    timeout: int = 30
-) -> str:
-    """Fallback to /v1/completions if chat endpoint is unavailable."""
-    payload = {
-        "model": model,
-        "prompt": prompt,
-        "max_tokens": max_tokens,
-        "temperature": temperature,
-        "n": 1,
-    }
-    r = requests.post(f"{base_url}/v1/completions", json=payload, timeout=timeout)
-    r.raise_for_status()
-    data = r.json()
-    return data["choices"][0]["text"].strip()
+def extract_pred_confidence_from_chat_logprobs(logprobs_obj, pred_label: str) -> Optional[float]:
+    """
+    vLLM chat logprobs often look like:
+      {"content":[{"token":"True","top_logprobs":[{"token":"True","logprob":...}, ...]}, ...]}
+
+    We take the first generated token's top_logprobs, pull True/False, normalize, and return P(pred_label).
+    """
+    if not logprobs_obj or pred_label not in ("True", "False"):
+        return None
+
+    content = logprobs_obj.get("content", [])
+    if not content:
+        return None
+
+    first = content[0]
+    top = first.get("top_logprobs", [])
+    if not top:
+        return None
+
+    tf_lp = {}
+    for t in top:
+        tok = str(t.get("token", "")).strip()
+        if tok == "True":
+            tf_lp["True"] = float(t["logprob"])
+        elif tok == "False":
+            tf_lp["False"] = float(t["logprob"])
+
+    if not tf_lp:
+        return None
+
+    m = max(tf_lp.values())
+    exps = {k: math.exp(v - m) for k, v in tf_lp.items()}
+    Z = sum(exps.values())
+    probs = {k: v / Z for k, v in exps.items()}
+
+    return probs.get(pred_label)
 
 # ---------- Core logic ----------
 
@@ -104,15 +120,6 @@ def generate_for_item(
     except Exception as e:
         print(f"[warn] chat endpoint failed, falling back to completions: {e}")
 
-    # Fallback to completions
-    prompt = f"{SYSTEM_PROMPT}\n\nUser:\n{user_prompt}\n\nAssistant:"
-    return completion_fallback(
-        base_url,
-        model,
-        prompt,
-        max_tokens=8,
-        temperature=0.0,
-    )
 
 def main(
     in_path: Path = IN_PATH,
@@ -139,7 +146,8 @@ def main(
     results = []
     for i, item in enumerate(data, 1):
         try:
-            gen = generate_for_item(base_url, model, item)
+            resp = generate_for_item(base_url, model, item)
+            gen = resp["text"]
             # Keep only the exact True/False token if extra whitespace/non-alpha slips in
             gen_clean = gen.strip().split()[0]
             if gen_clean.lower().startswith("true"):
@@ -147,8 +155,14 @@ def main(
             elif gen_clean.lower().startswith("false"):
                 gen_clean = "False"
             # Append result with an added "generated_output"
+            # compute pred_confidence
+            pred_conf = None
+            if gen_clean in ("True", "False"):
+                pred_conf = extract_pred_confidence_from_chat_logprobs(resp.get("logprobs"), gen_clean)
+
             new_item = dict(item)
             new_item["generated_output"] = gen_clean
+            new_item["pred_confidence"] = pred_conf  # 
             results.append(new_item)
         except Exception as e:
             print(f"[error] item {i} failed: {e}")
