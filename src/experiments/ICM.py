@@ -400,21 +400,62 @@ I think this claim is """
         if i['consistency_id'] not in train_map:
             train_map[i['consistency_id']] = []
         train_map[i['consistency_id']].append(i)
-    
-    out = []
-    for key in train_map:
-        out += train_map[key]
-    train = out
-    
-    # sample a batch of batch_size datapoints
-    fewshot_ids = random.sample(
-        list(range(len(train)// args.GROUP_SIZE)), args.batch_size // args.GROUP_SIZE
-    )
-    fewshot_ids = [
-        i * args.GROUP_SIZE + j for i in fewshot_ids for j in range(args.GROUP_SIZE)
-    ]
 
-    return train, fewshot_ids
+    # Sample at the consistency_id-group level, then flatten.
+    group_keys = list(train_map.keys())
+    target_num_groups = args.batch_size // args.GROUP_SIZE
+    if target_num_groups <= 0:
+        raise ValueError(
+            f"Invalid batch_size/GROUP_SIZE: batch_size={args.batch_size}, GROUP_SIZE={args.GROUP_SIZE}"
+        )
+
+    # When continuing or interactively restarting, force-include any groups that already
+    # have ICM labels, so the run does not depend on reproducing the original seed sampling.
+    force_include_group_keys = []
+    if bool(args.continue_from_existing) or bool(args.use_interactive_restart):
+        for key in group_keys:
+            group = train_map[key]
+            if any(ex.get("icm_label", None) is not None for ex in group):
+                force_include_group_keys.append(key)
+
+    if len(force_include_group_keys) > target_num_groups:
+        raise ValueError(
+            "Too many consistency_id groups with existing icm_label to fit into the requested batch. "
+            f"Have {len(force_include_group_keys)} labeled groups, but batch can only hold {target_num_groups} groups "
+            f"(batch_size={args.batch_size}, GROUP_SIZE={args.GROUP_SIZE}). Increase batch_size or reduce labeled groups in the file."
+        )
+
+    remaining_group_keys = [
+        k for k in group_keys if k not in set(force_include_group_keys)
+    ]
+    num_to_sample = target_num_groups - len(force_include_group_keys)
+    if len(remaining_group_keys) < num_to_sample:
+        raise ValueError(
+            "Not enough remaining consistency_id groups to fill the requested batch. "
+            f"Need {num_to_sample} more groups, but only have {len(remaining_group_keys)} available. "
+            "Decrease batch_size or provide a larger dataset file."
+        )
+
+    sampled_group_keys = (
+        random.sample(remaining_group_keys, num_to_sample) if num_to_sample > 0 else []
+    )
+    selected_group_keys = force_include_group_keys + sampled_group_keys
+
+    # Optional sanity check: group sizes should match GROUP_SIZE.
+    bad_groups = [k for k in selected_group_keys if len(train_map[k]) != args.GROUP_SIZE]
+    if len(bad_groups) > 0:
+        raise ValueError(
+            "Some selected consistency_id groups do not match GROUP_SIZE. "
+            f"GROUP_SIZE={args.GROUP_SIZE}, offending consistency_id(s)={bad_groups[:5]}" +
+            (" (truncated)" if len(bad_groups) > 5 else "")
+        )
+
+    selected_train = []
+    for key in selected_group_keys:
+        selected_train.extend(train_map[key])
+
+    fewshot_ids = list(range(len(selected_train)))
+    return selected_train, fewshot_ids
 
 def initialize(train, fewshot_ids, args):
     demonstrations = {}
@@ -424,59 +465,121 @@ def initialize(train, fewshot_ids, args):
 
     random_init_labels = [1] * (args.num_seed // 2) + [0] * (args.num_seed // 2)
     random.shuffle(random_init_labels)
-    
-    for id, i in enumerate(fewshot_ids):
+
+    # First build items with stable uids for this run
+    items = []
+    for uid, i in enumerate(fewshot_ids):
         item = train[i]
-        item["vanilla_label"] = item["label"] # store dataset labels to measure agreement during the searching process
-        item["uid"] = id
-        whole_ids.append(item["uid"])
-        if bool(args.continue_from_existing): # if we want to continue
-            item["label"] = item.get("icm_label", None)
-            # item["label_locked"] = item.get("icm_label_locked", False)
-            if id < args.num_seed:
-                item["type"] = "seed"
-                if item.get("icm_label", None) is None:
-                    item["label"] = random_init_labels[id]
-                seed_ids.append(item["uid"])
-            else:
+        item["vanilla_label"] = item["label"]  # store dataset labels to measure agreement during the searching process
+        item["uid"] = uid
+        whole_ids.append(uid)
+        items.append(item)
+        demonstrations[uid] = item
+
+    if bool(args.continue_from_existing):
+        # Keep any existing icm_label as labeled *in addition* to a fresh random seed set.
+        # This ensures initial pool size = num_seed + (# existing icm_label entries in the batch).
+        icm_labeled_items = []
+        for item in items:
+            if item.get("icm_label", None) is not None:
+                item["label"] = item["icm_label"]
                 item["type"] = "predict"
-                if item.get("icm_label", None) is None:
-                    unlabeled_ids.append(item["uid"])
-        elif bool(args.use_interactive_restart): # restart icm from interacitive labels (selected on confidence)
+                icm_labeled_items.append(item)
+            else:
+                item["label"] = None
+                item["type"] = "predict"
+
+        unlabeled_pool = [it for it in items if it.get("label", None) is None]
+        if len(unlabeled_pool) < args.num_seed:
+            raise ValueError(
+                "Not enough unlabeled examples in the selected batch to create the requested seed set. "
+                f"Need num_seed={args.num_seed}, but only have {len(unlabeled_pool)} unlabeled examples. "
+                "Increase batch_size or decrease num_seed."
+            )
+
+        print(f"ICM labeled items: {len(icm_labeled_items)}, their vanilla labels match: {sum(1 for it in icm_labeled_items if it['label'] == it['vanilla_label'])}/{len(icm_labeled_items)}")
+        
+        chosen_seed_items = random.sample(unlabeled_pool, args.num_seed)
+        for idx, item in enumerate(chosen_seed_items):
+            item["type"] = "seed"
+            item["label"] = random_init_labels[idx]
+            seed_ids.append(item["uid"])
+
+        unlabeled_ids = [it["uid"] for it in items if it.get("label", None) is None]
+        return demonstrations, unlabeled_ids, whole_ids, seed_ids
+
+    if bool(args.use_interactive_restart):
+        # Restart from existing interactive icm_label seeds, then top up with random seeds to reach num_seed.
+        for item in items:
             if item.get("icm_label", None) is not None:
                 item["label"] = item.get("icm_label", None)
                 item["type"] = "seed"
                 seed_ids.append(item["uid"])
-            elif id < args.num_seed:
-                item["type"] = "seed"
-                item["label"] = random_init_labels[id]
-                seed_ids.append(item["uid"])
             else:
                 item["label"] = None
                 item["type"] = "predict"
-                unlabeled_ids.append(item["uid"])
-     
-        elif id >= args.num_seed:  # set labels to None
+
+        remaining = max(0, args.num_seed - len(seed_ids))
+        if remaining > 0:
+            unlabeled_pool = [it for it in items if it.get("label", None) is None]
+            if len(unlabeled_pool) < remaining:
+                raise ValueError(
+                    "Not enough unlabeled examples in the selected batch to top up the seed set. "
+                    f"Need {remaining} more seeds (num_seed={args.num_seed}, existing_icm={len(seed_ids)}), "
+                    f"but only have {len(unlabeled_pool)} unlabeled examples."
+                )
+            chosen_seed_items = random.sample(unlabeled_pool, remaining)
+            # Use a fresh random label list sized for the top-up portion.
+            topup_labels = [1] * (remaining // 2) + [0] * (remaining - (remaining // 2))
+            random.shuffle(topup_labels)
+            for idx, item in enumerate(chosen_seed_items):
+                item["type"] = "seed"
+                item["label"] = topup_labels[idx]
+                seed_ids.append(item["uid"])
+
+        unlabeled_ids = [it["uid"] for it in items if it.get("label", None) is None]
+        return demonstrations, unlabeled_ids, whole_ids, seed_ids
+
+    # Default behavior (fresh run): first num_seed are seeds, rest unlabeled.
+    for uid, item in enumerate(items):
+        if uid >= args.num_seed:
             item["label"] = None
             item["type"] = "predict"
-            unlabeled_ids.append(item["uid"])
-        elif bool(args.use_goldseed): # use gold labels for seed set
+            unlabeled_ids.append(uid)
+        elif bool(args.use_goldseed):
             item["type"] = "seed"
-            item["label"] = item["vanilla_label"] # or leave it unchanged
-            seed_ids.append(item["uid"])
-        else: # set random labels
+            item["label"] = item["vanilla_label"]
+            seed_ids.append(uid)
+        else:
             item["type"] = "seed"
-            item["label"] = random_init_labels[id]
-            seed_ids.append(item["uid"])
-        demonstrations[id] = item
-        
+            item["label"] = random_init_labels[uid]
+            seed_ids.append(uid)
+
     return demonstrations, unlabeled_ids, whole_ids, seed_ids
 
 
 def main(args):
     train, fewshot_ids = load_data(args)
+    
+    # If continuing from existing or restarting, force-include all samples with icm_label
+    if bool(args.continue_from_existing) or bool(args.use_interactive_restart):
+        # Find all samples with icm_label in the entire dataset
+        icm_labeled_indices = [idx for idx, item in enumerate(train) if item.get("icm_label", None) is not None]
+        
+        # Add missing icm_label samples to fewshot_ids
+        existing_ids_set = set(fewshot_ids)
+        for idx in icm_labeled_indices:
+            if idx not in existing_ids_set:
+                fewshot_ids.append(idx)
+        
+        print(f"Force-included {len(icm_labeled_indices)} samples with icm_label. Total batch size: {len(fewshot_ids)}")
 
     demonstrations, unlabeled_ids, whole_ids, seed_ids = initialize(train, fewshot_ids, args)
+    
+    # Debug: show icm_label samples after initialize
+    if bool(args.continue_from_existing) or bool(args.use_interactive_restart):
+        icm_items = {k: v for k, v in demonstrations.items() if v.get("icm_label", None) is not None}
+        print(f"After initialize, icm_label samples: {[(k, v['label'], v['vanilla_label']) for k, v in icm_items.items()]}")
     
     cur_metric = {
         "train_prob": -1e6,
@@ -509,9 +612,19 @@ def main(args):
             results = asyncio.run(pipeline.run())
             cur_metric = results["evaluate"]
             
+            # Debug: check icm_label samples before fix
+            if bool(args.continue_from_existing) or bool(args.use_interactive_restart):
+                icm_items = {k: v for k, v in demonstrations.items() if v.get("icm_label", None) is not None}
+                print(f"Before fix_inconsistency, icm_label samples: {[(k, v['label'], v.get('score', 'N/A')) for k, v in icm_items.items()]}")
+            
             demonstrations, cur_metric = fix_inconsistency(
                 demonstrations, cur_metric, name, args.alpha, iter=iter, K=args.consistency_fix_K
             )
+            
+            # Debug: check icm_label samples after fix
+            if bool(args.continue_from_existing) or bool(args.use_interactive_restart):
+                icm_items = {k: v for k, v in demonstrations.items() if v.get("icm_label", None) is not None}
+                print(f"After fix_inconsistency, icm_label samples: {[(k, v['label'], v.get('score', 'N/A')) for k, v in icm_items.items()]}")
             
         cur_pool = {
             k: v for k, v in demonstrations.items() if v["label"] is not None

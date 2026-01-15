@@ -73,6 +73,24 @@ CUDA_VISIBLE_DEVICES=3 python -m vllm.entrypoints.openai.api_server \
 If you set `LLAMA_API_BASE` in your shell environment (e.g. `export LLAMA_API_BASE=http://127.0.0.1:8001/v1`), it will override the value loaded from `SECRETS`. This is useful when running multiple vLLM instances on different ports.
 
 You should create a file called SECRETS at the root of the repository with the following contents:
+
+
+```
+LLAMA_API_BASE=<your_api_base_url>
+NYU_ORG=None
+ARG_ORG=None
+API_KEY=None
+```
+
+### Data Preparation
+
+Download data from this [link](https://drive.google.com/file/d/1AJdFJO9IHfOnWHyIlGvInyndLu6EvcfV/view?usp=sharing).
+Put it under the `data/` directory.
+
+## Run
+
+The main script is located in `src/experiments/ICM.py`
+An example command for labeling truthfulQA data:
 ```bash
 export LLAMA_API_BASE="http://127.0.0.1:8000/v1"
 python src/experiments/ICM.py ...  # 项目1
@@ -91,25 +109,11 @@ python ICM.py --testbed OpinionQA --alpha 50 --file_name preferences_POLPARTY_bi
 python ICM.py --testbed OpinionQA --alpha 50 --file_name preferences_POLPARTY_binary_noRefused_Republican_part1of4.json  --K 500 --model meta-llama/Llama-3.1-70B --batch_size 128
 ```
 
-```
-LLAMA_API_BASE=<your_api_base_url>
-NYU_ORG=None
-ARG_ORG=None
-API_KEY=None
-```
+### Interactive Pipeline
+```bash
+export LLAMA_API_BASE="http://127.0.0.1:8000/v1"
 
-### Data Preparation
-
-Download data from this [link](https://drive.google.com/file/d/1AJdFJO9IHfOnWHyIlGvInyndLu6EvcfV/view?usp=sharing).
-Put it under the `data/` directory.
-
-## Run
-
-The main script is located in `src/experiments/ICM.py`
-An example command for labeling truthfulQA data:
-```
-cd src/experiments
-python ICM.py --testbed truthfulQA --alpha 50 --file_name my_truthfulqa_subset.json --K 500 --model meta-llama/Llama-3.1-8B --batch_size 128
+python ICM.py --testbed OpinionQA --alpha 50 --file_name preferences_POLPARTY_binary_noRefused_Independent_part1of4.json2of4.json  --K 500 --model llama70b-gpu0 --batch_size 128 --continue_from_existing 1
 ```
 
 Arguments:
