@@ -636,6 +636,11 @@ def main(args):
             #     candidates_ids = candidate_ids_unlocked
             # else:
             candidates_ids = whole_ids
+            # if(args.continue_from_existing):
+            #     candidate_ids_unlocked = [i for i in whole_ids if not demonstrations[i]["label_locked"]]
+            #     candidates_ids = candidate_ids_unlocked
+            # else:
+            candidates_ids = whole_ids
             weights = [1 for _ in range(len(candidates_ids))]
             for i in candidates_ids:
                 if i in cur_pool:
