@@ -93,12 +93,12 @@ The main script is located in `src/experiments/ICM.py`
 An example command for labeling truthfulQA data:
 ```bash
 export LLAMA_API_BASE="http://127.0.0.1:8000/v1"
-python src/experiments/ICM.py ...  # 项目1
+python src/experiments/ICM.py ...
 ```
 
 ```bash
 export LLAMA_API_BASE="http://127.0.0.1:8001/v1"
-python src/experiments/ICM.py ...  # 项目2
+python src/experiments/ICM.py ...
 ```
 
 ```bash
