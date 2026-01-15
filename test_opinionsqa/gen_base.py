@@ -1,6 +1,7 @@
 import json, sys, time, requests, re
 from pathlib import Path
 from typing import Optional
+import math
 
 BASE_URL = "http://localhost:8000"
 IN_PATH = Path("alpaca_test.json")
@@ -39,29 +40,26 @@ def request_with_retries(url: str, payload: dict, timeout: int = 60, max_retries
     # Shouldn't reach here
     raise last_err
 
-def complete(base_url: str, model: str, prompt: str, max_tokens: int = 8) -> str:
+def complete(base_url: str, model: str, prompt: str, max_tokens: int = 8, logprobs_k: int = 5):
     payload = {
         "model": model,
         "prompt": prompt,
         "max_tokens": max_tokens,
         "temperature": 0.0,
         "n": 1,
-        # These stops help prevent the model from echoing and then stopping early with blanks.
+        "logprobs": logprobs_k,  
         "stop": ["\nInstruction:", "\nInput:", "\nTask:", "\nLabel:", "\nAnswer", "\n\n"]
     }
     r = request_with_retries(f"{base_url}/v1/completions", payload)
     data = r.json()
 
-    # Defensive checks
-    if not isinstance(data, dict):
-        return ""
-    if "error" in data:
-        # vLLM/OpenAI-compatible errors
-        return ""
-    choices = data.get("choices") or []
+    choices = (data or {}).get("choices") or []
     if not choices or "text" not in choices[0]:
-        return ""
-    return (choices[0]["text"] or "").strip()
+        return "", None
+
+    text = (choices[0]["text"] or "").strip()
+    lp = choices[0].get("logprobs")  
+    return text, lp
 
 _TRUE_FALSE_RE = re.compile(r"\b(true|false)\b", re.IGNORECASE)
 
@@ -94,6 +92,42 @@ def normalize_bool(txt: str) -> str:
         return "True" if m.group(1).lower() == "true" else "False"
     return ""
 
+def extract_pred_confidence_from_completion_logprobs(logprobs_obj, pred_label: str) -> Optional[float]:
+    if not logprobs_obj:
+        return None
+
+    top = logprobs_obj.get("top_logprobs")
+    if not top or not isinstance(top, list) or len(top) == 0:
+        return None
+
+    first_top = top[0]
+    if not isinstance(first_top, dict):
+        return None
+
+    # token variants that sometimes appear
+    true_keys  = ["True", " True", "true", " true"]
+    false_keys = ["False", " False", "false", " false"]
+
+    lp_true = next((first_top[k] for k in true_keys  if k in first_top), None)
+    lp_false = next((first_top[k] for k in false_keys if k in first_top), None)
+
+    if lp_true is None and lp_false is None:
+        return None
+
+    # normalize over (True, False) only
+    vals = {}
+    if lp_true is not None:
+        vals["True"] = lp_true
+    if lp_false is not None:
+        vals["False"] = lp_false
+
+    m = max(vals.values())
+    probs = {k: math.exp(v - m) for k, v in vals.items()}
+    Z = sum(probs.values())
+    probs = {k: v / Z for k, v in probs.items()}
+
+    return probs.get(pred_label)
+
 def main(in_path=IN_PATH, out_path=OUT_PATH, base_url=BASE_URL, model=MODEL):
     data = json.loads(Path(in_path).read_text(encoding="utf-8"))
     assert isinstance(data, list), "Input must be a list of Alpaca-style records."
@@ -104,26 +138,27 @@ def main(in_path=IN_PATH, out_path=OUT_PATH, base_url=BASE_URL, model=MODEL):
         input_text  = item.get("input", "")
 
         prompt = build_prompt(instruction, input_text)
-
+        raw, lp = "", None
         try:
-            raw = complete(base_url, model, prompt, max_tokens=8)
+            raw, lp = complete(base_url, model, prompt, max_tokens=8, logprobs_k=5)
             gen = normalize_bool(raw)
             if not gen:
                 # Second attempt with slightly larger budget if we got blank
-                raw = complete(base_url, model, prompt, max_tokens=16)
+                raw, lp = complete(base_url, model, prompt, max_tokens=16, logprobs_k=5)
                 gen = normalize_bool(raw)
         except Exception as e:
             print(f"[error] item {i} failed: {e}")
             gen = ""
 
         if not gen:
-            # Optional: last-resort heuristic (comment out if you prefer empty)
             low = (raw or "").lower()
             gen = "True" if ("true" in low and "false" not in low) else \
                   "False" if ("false" in low and "true" not in low) else ""
 
         new_item = dict(item)
         new_item["generated_output"] = gen
+        conf = extract_pred_confidence_from_completion_logprobs(lp, gen) if gen in ("True", "False") else None
+        new_item["pred_confidence"] = conf
         results.append(new_item)
 
         # small pacing to be nice to local server
