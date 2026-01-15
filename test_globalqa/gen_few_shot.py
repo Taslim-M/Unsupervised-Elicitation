@@ -57,7 +57,7 @@ def chat_completion(
 
     return {
         "text": data["choices"][0]["message"]["content"].strip(),
-        "logprobs": data["choices"][0].get("logprobs"),  # NEW (may be None if server doesn't return it)
+        "logprobs": data["choices"][0].get("logprobs"),  
     }
 
 
