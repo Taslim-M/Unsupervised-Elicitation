@@ -11,18 +11,21 @@ conda activate UE
 pip install -e .
 pip install vllm bitsandbytes
 
+set -g mouse on
+huggingface-cli login --token YOUR_HF_TOKEN
+
 huggingface-cli download yidingp/icm_OpinionQA --repo-type dataset --local-dir ./data --local-dir-use-symlinks False
 ```
 
 
 ### API for Pretrained Base Models
 
-You should have access to an API for pretrained base models, which can return top-K (e.g. 20) logprobs.
+llama 3.1 405B
+```bash
+python -m vllm.entrypoints.openai.api_server \  --model meta-llama/Llama-3.1-405B \  --tensor-parallel-size 4 \  --served-model-name meta-llama/Llama-3.1-8B \  --quantization bitsandbytes \  --load-format bitsandbytes \  --dtype bfloat16 \  --gpu-memory-utilization 0.92 \  --host 0.0.0.0 \  --port 8000
+```
 
-Since most public api servers (e.g. openrouter) only support post-trained chat models, you probably need to deploy pretrained base models yourself. For example, we use vllm to deploy llama models in our experiments.
-
-In particular, we highly recommend activating the `prefix caching` feature to accelerate the experiments, because our algorithm will create many API queries with similar prefixes.
-
+llama 3.1 70B multi-gpu
 ```bash
 CUDA_VISIBLE_DEVICES=0 python -m vllm.entrypoints.openai.api_server \
   --model meta-llama/Llama-3.1-70B \
