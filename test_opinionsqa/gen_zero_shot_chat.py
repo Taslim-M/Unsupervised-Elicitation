@@ -16,7 +16,7 @@ OUT_PATH = Path("results_alpaca_test.json")
 def get_models(base_url: str) -> List[str]:
     """Return available model ids from an OpenAI-compatible vLLM server."""
     try:
-        r = requests.get(f"{base_url}/v1/models", timeout=10)
+        r = requests.get(f"{base_url}/v1/models", timeout=30)
         r.raise_for_status()
         data = r.json()
         return [m.get("id") for m in data.get("data", []) if m.get("id")]
@@ -32,8 +32,8 @@ def chat_completion(
     max_tokens: int = 8,
     temperature: float = 0.0,
     timeout: int = 30
-) -> str:
-    """Call /v1/chat/completions. Returns text."""
+) -> Dict[str, Any]:
+    """Call /v1/chat/completions. Returns dict with 'text' and 'logprobs'."""
     messages = []
     if system_prompt:
         messages.append({"role": "system", "content": system_prompt})
@@ -45,11 +45,16 @@ def chat_completion(
         "max_tokens": max_tokens,
         "temperature": temperature,
         "n": 1,
+        "logprobs": True,
+        "top_logprobs": 5,
     }
     r = requests.post(f"{base_url}/v1/chat/completions", json=payload, timeout=timeout)
     r.raise_for_status()
     data = r.json()
-    return data["choices"][0]["message"]["content"].strip()
+    return {
+        "text": data["choices"][0]["message"]["content"].strip(),
+        "logprobs": data["choices"][0].get("logprobs"),
+    }
 
 def extract_pred_confidence_from_chat_logprobs(logprobs_obj, pred_label: str) -> Optional[float]:
     """
@@ -124,7 +129,8 @@ def generate_for_item(
 def main(
     in_path: Path = IN_PATH,
     out_path: Path = OUT_PATH,
-    base_url: str = BASE_URL
+    base_url: str = BASE_URL,
+    model_name: Optional[str] = None
 ):
     # Load input
     with in_path.open("r", encoding="utf-8") as f:
@@ -134,14 +140,18 @@ def main(
         raise ValueError("Input JSON must be a list of Alpaca-style records.")
 
     # Pick a model
-    models = get_models(base_url)
-    if not models:
-        # If API doesn't expose models, allow a dummy name; many vLLM servers accept it anyway.
-        model = "local-model"
-        print("[warn] Could not list models; using model='local-model'.")
+    if model_name:
+        model = model_name
+        print(f"[info] Using specified model: {model}")
     else:
-        model = models[0]
-        print(f"[info] Using model: {model}")
+        models = get_models(base_url)
+        if not models:
+            # If API doesn't expose models, allow a dummy name; many vLLM servers accept it anyway.
+            model = "local-model"
+            print("[warn] Could not list models; using model='local-model'.")
+        else:
+            model = models[0]
+            print(f"[info] Using model: {model}")
 
     results = []
     for i, item in enumerate(data, 1):
@@ -180,8 +190,9 @@ def main(
     print(f"[done] Wrote {out_path} ({len(results)} items).")
 
 if __name__ == "__main__":
-    # Optional CLI: python script.py [in_json] [out_json] [base_url]
+    # Optional CLI: python script.py [in_json] [out_json] [base_url] [model]
     in_arg = Path(sys.argv[1]) if len(sys.argv) > 1 else IN_PATH
     out_arg = Path(sys.argv[2]) if len(sys.argv) > 2 else OUT_PATH
     url_arg = sys.argv[3] if len(sys.argv) > 3 else BASE_URL
-    main(in_arg, out_arg, url_arg)
+    model_arg = sys.argv[4] if len(sys.argv) > 4 else None
+    main(in_arg, out_arg, url_arg, model_arg)
