@@ -22,7 +22,7 @@ huggingface-cli download yidingp/icm_OpinionQA --repo-type dataset --local-dir .
 
 llama 3.1 405B
 ```bash
-python -m vllm.entrypoints.openai.api_server \  --model meta-llama/Llama-3.1-405B \  --tensor-parallel-size 4 \  --served-model-name meta-llama/Llama-3.1-8B \  --quantization bitsandbytes \  --load-format bitsandbytes \  --dtype bfloat16 \  --gpu-memory-utilization 0.92 \  --host 0.0.0.0 \  --port 8000
+python -m vllm.entrypoints.openai.api_server  --model meta-llama/Llama-3.1-405B  --tensor-parallel-size 4  --served-model-name meta-llama/Llama-3.1-8B  --quantization bitsandbytes  --load-format bitsandbytes  --dtype bfloat16  --gpu-memory-utilization 0.92  --host 0.0.0.0  --port 8000
 ```
 
 llama 3.1 70B multi-gpu
