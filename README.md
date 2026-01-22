@@ -92,6 +92,10 @@ Put it under the `data/` directory.
 
 ## Run
 
+```bash
+./scripts/train.sh llama70b-gpu0 123456
+```
+
 The main script is located in `src/experiments/ICM.py`
 An example command for labeling truthfulQA data:
 ```bash
