@@ -28,7 +28,7 @@ do
             --file_name "$FILE_NAME" \
             --K 500 \
             --model "$MODEL" \
-            --batch_size 256 \
+            --batch_size 128 \
             --seed "$SEED"
             
         if [ $? -eq 0 ]; then
