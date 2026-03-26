@@ -9,7 +9,7 @@ cd Unsupervised-Elicitation
 conda env create -f env.yaml
 conda activate UE
 pip install -e .
-pip install vllm bitsandbytes
+pip install vllm==0.14.1 bitsandbytes
 
 set -g mouse on
 huggingface-cli login --token YOUR_HF_TOKEN
