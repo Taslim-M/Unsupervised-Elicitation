@@ -89,11 +89,16 @@ API_KEY=None
 
 Download data from this [link](https://drive.google.com/file/d/1AJdFJO9IHfOnWHyIlGvInyndLu6EvcfV/view?usp=sharing).
 Put it under the `data/` directory.
+OpinionQA files live under `data/processed_OpinionQA/`, and persona folds live under `data/persona_tailor_icm/`.
 
 ## Run
 
 ```bash
 ./scripts/train.sh llama70b-gpu0 123456
+```
+
+```bash
+./scripts/train_persona.sh llama70b-gpu0 123456
 ```
 
 The main script is located in `src/experiments/ICM.py`
@@ -116,6 +121,12 @@ python ICM.py --testbed OpinionQA --alpha 50 --file_name preferences_POLPARTY_bi
 python ICM.py --testbed OpinionQA --alpha 50 --file_name preferences_POLPARTY_binary_noRefused_Republican_part1of4.json  --K 500 --model meta-llama/Llama-3.1-70B --batch_size 128
 ```
 
+```bash
+python src/experiments/ICM.py --testbed persona --alpha 50 --file_name DSN_50_fold1.json --K 500 --model llama70b-gpu0 --batch_size 256
+```
+
+For persona folds, if `--batch_size` is larger than the fold size, ICM will automatically run on the full fold.
+
 ### Interactive Pipeline
 ```bash
 export LLAMA_API_BASE="http://127.0.0.1:8000/v1"
@@ -127,7 +138,7 @@ Arguments:
 
 - `--seed`: random seed
 - `--alpha`: the coefficient for mutual predictability in our scoring function
-- `--testbed`: name of the testbed, e.g., alpaca, truthfulqa, gsm8k
+- `--testbed`: name of the testbed, e.g., alpaca, truthfulqa, gsm8k, persona
 - `--model`: name of the pretrained base model, e.g., meta-llama/Llama-3.1-70B
 - `--batch_size`: size of a minibatch when running ICM on large datasets that cannot be fit in to the context all at once[^1]. 
 [^1]: Since ICM relies on in-context learning, it might not be able to fix all datapoints in the context at once. In our experiments, we split the whole dataset into $N$ batches (e.g., each batch consists of 256 datapoints) based on the context limit and data length, and run ICM independently on each batch.
@@ -148,4 +159,3 @@ Instead of using the initial pretrained model ($M_0$) to label all $N$ batches, 
 - use $M_j$ to label the $j+1$-th batch.
 
 We use [axolotl](https://github.com/axolotl-ai-cloud/axolotl) for fine-tuning.
-

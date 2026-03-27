@@ -5,6 +5,7 @@ import os
 import random
 from collections import Counter
 from copy import deepcopy
+from pathlib import Path
 from tqdm import tqdm
 import numpy as np
 from datasets import load_dataset
@@ -322,9 +323,48 @@ def get_args():
     args = parser.parse_args()
     return args
 
+
+def sanitize_name_component(value):
+    return str(value).replace("\\", "-").replace("/", "-").replace(" ", "_")
+
+
+def resolve_dataset_file(args):
+    if args.file_name is None:
+        raise ValueError("--file_name is required for this experiment.")
+
+    data_dir = get_root_directory() / "data"
+    requested_path = Path(args.file_name)
+
+    if requested_path.is_absolute():
+        try:
+            requested_path = requested_path.relative_to(data_dir)
+        except ValueError:
+            requested_path = Path(requested_path.name)
+    elif requested_path.parts and requested_path.parts[0] == "data":
+        requested_path = Path(*requested_path.parts[1:])
+
+    normalized_path = requested_path
+    if args.testbed == "persona":
+        if not (requested_path.parts and requested_path.parts[0] == "persona_tailor_icm"):
+            normalized_path = Path("persona_tailor_icm") / requested_path.name
+    elif args.testbed == "OpinionQA":
+        direct_path = data_dir / requested_path
+        if not direct_path.exists() and not (
+            requested_path.parts and requested_path.parts[0] == "processed_OpinionQA"
+        ):
+            normalized_path = Path("processed_OpinionQA") / requested_path.name
+
+    resolved_path = data_dir / normalized_path
+    if not resolved_path.exists():
+        raise FileNotFoundError(f"Could not find dataset file: {resolved_path}")
+
+    args.file_name = normalized_path.as_posix()
+    args.file_tag = sanitize_name_component(normalized_path.as_posix())
+    return resolved_path
+
+
 def load_data(args):
-    file_name = args.file_name
-    data_path = get_root_directory() / "data" / file_name
+    data_path = resolve_dataset_file(args)
     
     if args.testbed == "alpaca":
         with open(data_path) as f:
@@ -394,6 +434,30 @@ I think this claim is """
             i['source'] = 'OpinionQA'
             i['prompt'] = template.format(question=i['question'], choice=i['choice'])
         args.GROUP_SIZE = 2
+
+    elif args.testbed == "persona":
+        with open(data_path) as f:
+            train = json.load(f)
+        template = """Question: {question}
+Response 1: {choice}
+Response 2: {choice_2}
+Claim: Response 1 better matches the human response preference than Response 2.
+I think this claim is """
+
+        for i in train:
+            i["source"] = "persona"
+            i["consistency_key"] = "A>B" if i["label"] else "B>A"
+            i["prompt"] = template.format(
+                question=i["question"],
+                choice=i["choice"],
+                choice_2=i["choice_2"],
+            )
+        args.GROUP_SIZE = 2
+        if args.batch_size > len(train):
+            print(
+                f"Clamping persona batch_size from {args.batch_size} to full fold size {len(train)}"
+            )
+            args.batch_size = len(train)
         
     train_map = {}
     for i in train:
@@ -590,7 +654,7 @@ def main(args):
     }
     
     print('init random labels = ', Counter([i['label'] for i in demonstrations.values() if i['type'] == 'seed']), 'init label acc = ', np.mean([i['label'] == i['vanilla_label'] for i in demonstrations.values() if i['type'] == 'seed']))
-    name = f"{args.testbed}-llama70b-K{args.K}-bc{args.batch_size}_seed{args.seed}-initialsize{args.num_seed}-weighted{args.alpha}-decay{args.decay}-initialT{args.initial_T}-finalT{args.final_T}-scheduler{args.scheduler}-usegoldseed{args.use_goldseed}-file{args.file_name}"
+    name = f"{args.testbed}-llama70b-K{args.K}-bc{args.batch_size}_seed{args.seed}-initialsize{args.num_seed}-weighted{args.alpha}-decay{args.decay}-initialT{args.initial_T}-finalT{args.final_T}-scheduler{args.scheduler}-usegoldseed{args.use_goldseed}-file{getattr(args, 'file_tag', sanitize_name_component(args.file_name))}"
 
     iter = 0
     flip_cnt = 0
@@ -762,6 +826,7 @@ def main(args):
                 "question": ex.get("question"),
                 "choice": ex.get("choice"),
                 "choice_2": ex.get("choice_2"),
+                "persona_cluster_id": ex.get("persona_cluster_id"),
                 "prompt": ex.get("prompt"),
                 "type": ex.get("type"),
             }) + "\n")
