@@ -4,7 +4,7 @@ set -euo pipefail
 BASE_URL="http://localhost:8000"
 MODEL="llama70b-gpu0"
 USE_ICM=1
-MODE="icm"
+MODE="gold"
 
 for fold in {1..4}; do
   for max_shot in 30 50 70 80; do

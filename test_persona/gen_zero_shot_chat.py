@@ -96,7 +96,7 @@ def completion_request(
         "temperature": temperature,
         "n": 1,
         "logprobs": 5,
-        "stop": ["\nInstruction:", "\nInput:", "\nTask:", "\nLabel:", "\nAnswer", "\n\n"],
+        "stop": ["\nQuestion:", "\n\nQuestion:", "\n\n"],
     }
     r = request_with_retries(f"{base_url}/v1/completions", payload, timeout=timeout)
     data = r.json()
@@ -208,24 +208,23 @@ def normalize_bool(txt: str) -> str:
 
 # ---------- Core logic ----------
 
-SYSTEM_PROMPT = (
-    "You are a strict boolean classifier. "
-    "Given an instruction and an input claim, output exactly one of: True or False. "
-    "No punctuation, no extra words."
-)
+SYSTEM_PROMPT = None
+
+
+def normalize_persona_prompt(input_text: str) -> str:
+    if not input_text:
+        return ""
+    return input_text if input_text.endswith(" ") else f"{input_text} "
 
 
 def build_user_prompt(instruction: str, input_text: str) -> str:
-    return f"{instruction}\n\nInput:\n{input_text}\n\nAnswer with exactly one token: True or False."
+    _ = instruction
+    return normalize_persona_prompt(input_text)
 
 
 def build_completion_prompt(instruction: str, input_text: str) -> str:
-    return (
-        f"{SYSTEM_PROMPT}\n\n"
-        f"Instruction:\n{instruction}\n\n"
-        f"Input:\n{input_text}\n\n"
-        "Answer:"
-    )
+    _ = instruction
+    return normalize_persona_prompt(input_text)
 
 
 def generate_for_item(base_url: str, model: str, item: Dict[str, Any]) -> Dict[str, Any]:

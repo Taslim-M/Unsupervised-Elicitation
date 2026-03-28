@@ -8,19 +8,12 @@ IN_PATH = Path("fold1_test_opinionsqa.json")
 OUT_PATH = Path("results_zeroshot_base_fold1.json")
 MODEL = "meta-llama/Llama-3.1-8B"  # set to your loaded model id if needed
 
-SYSTEM_HINT = (
-    "You are a strict boolean classifier. "
-    "Given an instruction and an input claim, output exactly one of: True or False."
-)
-
 def build_prompt(instruction: str, input_text: str) -> str:
-    # Self-contained prompt for base (non-chat) models
-    return (
-        f"{SYSTEM_HINT}\n\n"
-        f"Instruction:\n{instruction}\n\n"
-        f"Input:\n{input_text}\n\n"
-        "Answer:"
-    )
+    # ICM persona prompt is already encoded in `input_text`.
+    _ = instruction
+    if input_text:
+        return input_text if input_text.endswith(" ") else f"{input_text} "
+    return ""
 
 def request_with_retries(url: str, payload: dict, timeout: int = 60, max_retries: int = 3, backoff: float = 0.5) -> requests.Response:
     last_err = None
@@ -48,7 +41,7 @@ def complete(base_url: str, model: str, prompt: str, max_tokens: int = 8, logpro
         "temperature": 0.0,
         "n": 1,
         "logprobs": logprobs_k,  
-        "stop": ["\nInstruction:", "\nInput:", "\nTask:", "\nLabel:", "\nAnswer", "\n\n"]
+        "stop": ["\nQuestion:", "\n\nQuestion:", "\n\n"],
     }
     r = request_with_retries(f"{base_url}/v1/completions", payload)
     data = r.json()
