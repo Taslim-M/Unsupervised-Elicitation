@@ -5,7 +5,7 @@ import time
 from pathlib import Path
 
 from completion_utils import (
-    run_completion_flow,
+    run_binary_scoring_flow,
 )
 
 
@@ -27,7 +27,7 @@ def main(in_path=IN_PATH, out_path=OUT_PATH, base_url=BASE_URL, model=MODEL):
         prompt = item.get("prompt", "")
         completion_info = None
         try:
-            completion_info = run_completion_flow(base_url, model, prompt)
+            completion_info = run_binary_scoring_flow(base_url, model, prompt)
             prediction = completion_info["prediction"]
         except Exception as exc:
             print(f"[error] item {idx} failed: {exc}")
@@ -38,6 +38,8 @@ def main(in_path=IN_PATH, out_path=OUT_PATH, base_url=BASE_URL, model=MODEL):
                 "finish_reason": None,
                 "error_message": str(exc),
                 "completion_attempts": [],
+                "candidate_scores": {},
+                "scoring_mode": "error",
             }
 
         result = dict(item)
@@ -47,6 +49,8 @@ def main(in_path=IN_PATH, out_path=OUT_PATH, base_url=BASE_URL, model=MODEL):
         result["finish_reason"] = completion_info["finish_reason"]
         result["error_message"] = completion_info["error_message"]
         result["completion_attempts"] = completion_info["completion_attempts"]
+        result["candidate_scores"] = completion_info["candidate_scores"]
+        result["scoring_mode"] = completion_info["scoring_mode"]
         result["_prompt_char_len"] = len(prompt)
         results.append(result)
         time.sleep(0.005)

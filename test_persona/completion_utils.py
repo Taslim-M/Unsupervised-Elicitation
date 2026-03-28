@@ -68,6 +68,65 @@ def complete(
     }
 
 
+def score_suffix_via_echo(
+    base_url,
+    model,
+    prompt,
+    suffix,
+    logprobs_k=5,
+    timeout=60,
+):
+    full_prompt = f"{prompt}{suffix}"
+    payload = {
+        "model": model,
+        "prompt": full_prompt,
+        "max_tokens": 0,
+        "temperature": 0.0,
+        "n": 1,
+        "logprobs": logprobs_k,
+        "echo": True,
+    }
+    response = request_with_retries(f"{base_url}/v1/completions", payload, timeout)
+    data = response.json()
+    choices = (data or {}).get("choices") or []
+    if not choices:
+        raise ValueError("Completion response did not contain any choices.")
+
+    choice = choices[0]
+    logprobs = choice.get("logprobs") or {}
+    token_logprobs = logprobs.get("token_logprobs")
+    text_offsets = logprobs.get("text_offset")
+    tokens = logprobs.get("tokens") or []
+    if not isinstance(token_logprobs, list) or not isinstance(text_offsets, list):
+        raise ValueError("Completion response did not include echoed token logprobs.")
+
+    prompt_len = len(prompt)
+    suffix_indices = [
+        index
+        for index, offset in enumerate(text_offsets)
+        if isinstance(offset, int) and offset >= prompt_len
+    ]
+    if not suffix_indices:
+        raise ValueError("Could not locate suffix tokens in echoed completion response.")
+
+    total_logprob = 0.0
+    suffix_tokens = []
+    for index in suffix_indices:
+        token_logprob = token_logprobs[index]
+        if token_logprob is None:
+            raise ValueError("Echoed completion returned None logprob for a suffix token.")
+        total_logprob += float(token_logprob)
+        if index < len(tokens):
+            suffix_tokens.append(tokens[index])
+
+    return {
+        "total_logprob": total_logprob,
+        "suffix_token_count": len(suffix_indices),
+        "suffix_tokens": suffix_tokens,
+        "raw_text": choice.get("text") or "",
+    }
+
+
 def normalize_bool(text):
     if not text or not text.strip():
         return ""
@@ -203,4 +262,100 @@ def run_completion_flow(
         "finish_reason": selected_attempt["finish_reason"] if selected_attempt else None,
         "error_message": " | ".join(error_messages) if error_messages else None,
         "completion_attempts": debug_attempts,
+    }
+
+
+def run_binary_scoring_flow(
+    base_url,
+    model,
+    prompt,
+    labels=("True", "False"),
+    logprobs_k=5,
+    timeout=60,
+    allow_generation_fallback=True,
+):
+    candidate_attempts = []
+    candidate_scores = {}
+
+    for label in labels:
+        attempt = {
+            "label": label,
+            "total_logprob": None,
+            "suffix_token_count": 0,
+            "suffix_tokens": [],
+            "error_message": None,
+        }
+        try:
+            score_info = score_suffix_via_echo(
+                base_url,
+                model,
+                prompt,
+                label,
+                logprobs_k=logprobs_k,
+                timeout=timeout,
+            )
+            attempt["total_logprob"] = score_info["total_logprob"]
+            attempt["suffix_token_count"] = score_info["suffix_token_count"]
+            attempt["suffix_tokens"] = score_info["suffix_tokens"]
+            candidate_scores[label] = score_info["total_logprob"]
+        except Exception as exc:
+            attempt["error_message"] = str(exc)
+        candidate_attempts.append(attempt)
+
+    if all(label in candidate_scores for label in labels):
+        maximum = max(candidate_scores.values())
+        probs = {
+            label: math.exp(score - maximum)
+            for label, score in candidate_scores.items()
+        }
+        normalizer = sum(probs.values())
+        probs = {
+            label: value / normalizer
+            for label, value in probs.items()
+        }
+        prediction = max(candidate_scores, key=candidate_scores.get)
+        return {
+            "prediction": prediction,
+            "pred_confidence": probs.get(prediction),
+            "raw_completion": "",
+            "finish_reason": "scored",
+            "error_message": None,
+            "completion_attempts": candidate_attempts,
+            "candidate_scores": candidate_scores,
+            "scoring_mode": "echo_logprob_binary",
+        }
+
+    error_messages = [
+        f"{attempt['label']}: {attempt['error_message']}"
+        for attempt in candidate_attempts
+        if attempt["error_message"]
+    ]
+    if allow_generation_fallback:
+        fallback_result = run_completion_flow(
+            base_url,
+            model,
+            prompt,
+            logprobs_k=logprobs_k,
+            timeout=timeout,
+        )
+        fallback_result["error_message"] = " | ".join(error_messages) if error_messages else fallback_result["error_message"]
+        fallback_result["candidate_scores"] = candidate_scores
+        fallback_result["scoring_mode"] = "generation_fallback"
+        fallback_result["completion_attempts"] = candidate_attempts + [
+            {
+                "label": "generation_fallback",
+                "attempts": fallback_result["completion_attempts"],
+            }
+        ]
+        return fallback_result
+
+    return {
+        "prediction": "",
+        "pred_confidence": None,
+        "raw_completion": "",
+        "finish_reason": None,
+        "error_message": " | ".join(error_messages) if error_messages else "Binary scoring failed.",
+        "completion_attempts": candidate_attempts,
+        "candidate_scores": candidate_scores,
+        "scoring_mode": "echo_logprob_binary",
     }
