@@ -134,6 +134,17 @@ export LLAMA_API_BASE="http://127.0.0.1:8000/v1"
 python ICM.py --testbed OpinionQA --alpha 50 --file_name preferences_POLPARTY_binary_noRefused_Independent_part1of4.json2of4.json  --K 500 --model llama70b-gpu0 --batch_size 128 --continue_from_existing 1
 ```
 
+### Persona Eval
+```bash
+python scripts/gen_persona_eval_data.py
+bash test_persona/run_base.sh
+bash test_persona/run_zero_shot_chat.sh
+LABEL_MODE=icm bash test_persona/run_few.sh
+LABEL_MODE=gold bash test_persona/run_few.sh
+python test_persona/utils_calc_acc.py test_persona/results
+```
+
+
 Arguments:
 
 - `--seed`: random seed
