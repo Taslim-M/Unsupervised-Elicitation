@@ -7,7 +7,7 @@ from typing import Optional
 import requests
 
 
-COMPLETION_STOP = ["\nQuestion:", "\n\nQuestion:", "\n\n"]
+COMPLETION_STOP = ["\nQuestion:", "\n\nQuestion:"]
 _TRUE_FALSE_RE = re.compile(r"\b(true|false)\b", re.IGNORECASE)
 
 
@@ -54,8 +54,18 @@ def complete(
     data = response.json()
     choices = (data or {}).get("choices") or []
     if not choices or "text" not in choices[0]:
-        return "", None
-    return (choices[0]["text"] or "").strip(), choices[0].get("logprobs")
+        return {
+            "raw_text": "",
+            "text": "",
+            "logprobs": None,
+            "finish_reason": None,
+        }
+    return {
+        "raw_text": choices[0].get("text") or "",
+        "text": (choices[0].get("text") or "").strip(),
+        "logprobs": choices[0].get("logprobs"),
+        "finish_reason": choices[0].get("finish_reason"),
+    }
 
 
 def normalize_bool(text):
@@ -119,3 +129,78 @@ def extract_pred_confidence_from_completion_logprobs(
     normalizer = sum(probs.values())
     probs = {key: value / normalizer for key, value in probs.items()}
     return probs.get(pred_label)
+
+
+def run_completion_flow(
+    base_url,
+    model,
+    prompt,
+    max_tokens_list=(8, 16),
+    logprobs_k=5,
+    timeout=60,
+):
+    attempts = []
+    selected_attempt = None
+
+    for max_tokens in max_tokens_list:
+        attempt = {
+            "max_tokens": max_tokens,
+            "raw_completion": "",
+            "normalized_prediction": "",
+            "finish_reason": None,
+            "error_message": None,
+        }
+        try:
+            response = complete(
+                base_url,
+                model,
+                prompt,
+                max_tokens=max_tokens,
+                logprobs_k=logprobs_k,
+                timeout=timeout,
+            )
+            attempt["raw_completion"] = response["raw_text"]
+            attempt["finish_reason"] = response["finish_reason"]
+            attempt["normalized_prediction"] = normalize_bool(response["raw_text"])
+            attempt["_logprobs"] = response["logprobs"]
+        except Exception as exc:
+            attempt["error_message"] = str(exc)
+            attempt["_logprobs"] = None
+
+        attempts.append(attempt)
+        if attempt["normalized_prediction"]:
+            selected_attempt = attempt
+            break
+
+    if selected_attempt is None and attempts:
+        selected_attempt = attempts[-1]
+
+    prediction = selected_attempt["normalized_prediction"] if selected_attempt else ""
+    pred_confidence = None
+    if prediction in ("True", "False") and selected_attempt is not None:
+        pred_confidence = extract_pred_confidence_from_completion_logprobs(
+            selected_attempt.get("_logprobs"),
+            prediction,
+        )
+
+    error_messages = [attempt["error_message"] for attempt in attempts if attempt["error_message"]]
+    debug_attempts = []
+    for attempt in attempts:
+        debug_attempts.append(
+            {
+                "max_tokens": attempt["max_tokens"],
+                "raw_completion": attempt["raw_completion"],
+                "normalized_prediction": attempt["normalized_prediction"],
+                "finish_reason": attempt["finish_reason"],
+                "error_message": attempt["error_message"],
+            }
+        )
+
+    return {
+        "prediction": prediction,
+        "pred_confidence": pred_confidence,
+        "raw_completion": selected_attempt["raw_completion"] if selected_attempt else "",
+        "finish_reason": selected_attempt["finish_reason"] if selected_attempt else None,
+        "error_message": " | ".join(error_messages) if error_messages else None,
+        "completion_attempts": debug_attempts,
+    }

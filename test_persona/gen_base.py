@@ -5,9 +5,7 @@ import time
 from pathlib import Path
 
 from completion_utils import (
-    complete,
-    extract_pred_confidence_from_completion_logprobs,
-    normalize_bool,
+    run_completion_flow,
 )
 
 
@@ -26,31 +24,30 @@ def main(in_path=IN_PATH, out_path=OUT_PATH, base_url=BASE_URL, model=MODEL):
 
     results = []
     for idx, item in enumerate(data, 1):
-        raw = ""
-        logprobs = None
         prompt = item.get("prompt", "")
+        completion_info = None
         try:
-            raw, logprobs = complete(base_url, model, prompt, max_tokens=8, logprobs_k=5)
-            prediction = normalize_bool(raw)
-            if not prediction:
-                raw, logprobs = complete(
-                    base_url, model, prompt, max_tokens=16, logprobs_k=5
-                )
-                prediction = normalize_bool(raw)
+            completion_info = run_completion_flow(base_url, model, prompt)
+            prediction = completion_info["prediction"]
         except Exception as exc:
             print(f"[error] item {idx} failed: {exc}")
             prediction = ""
-
-        if not prediction:
-            prediction = normalize_bool(raw)
+            completion_info = {
+                "pred_confidence": None,
+                "raw_completion": "",
+                "finish_reason": None,
+                "error_message": str(exc),
+                "completion_attempts": [],
+            }
 
         result = dict(item)
         result["generated_output"] = prediction
-        result["pred_confidence"] = (
-            extract_pred_confidence_from_completion_logprobs(logprobs, prediction)
-            if prediction in ("True", "False")
-            else None
-        )
+        result["pred_confidence"] = completion_info["pred_confidence"]
+        result["raw_completion"] = completion_info["raw_completion"]
+        result["finish_reason"] = completion_info["finish_reason"]
+        result["error_message"] = completion_info["error_message"]
+        result["completion_attempts"] = completion_info["completion_attempts"]
+        result["_prompt_char_len"] = len(prompt)
         results.append(result)
         time.sleep(0.005)
 
