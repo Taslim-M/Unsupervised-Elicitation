@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 DATA_DIR="${DATA_DIR:-${ROOT_DIR}/data/persona_eval_data}"
 RESULT_DIR="${RESULT_DIR:-${SCRIPT_DIR}/results}"
-BASE_URL="${BASE_URL:-http://localhost:8001}"
+BASE_URL="${BASE_URL:-http://localhost:8000}"
 MODEL="${MODEL:-llama70b-gpu0}"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 
