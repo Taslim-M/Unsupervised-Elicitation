@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import argparse
 import json
 import random
 import re
@@ -7,10 +8,30 @@ from pathlib import Path
 
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
-INPUT_DIR = ROOT_DIR / "data" / "persona_results"
-OUTPUT_DIR = ROOT_DIR / "data" / "persona_eval_data"
+PERSONA_TAILOR_DIR = ROOT_DIR / "data" / "Persona_Tailor"
+DEFAULT_INPUT_DIR = ROOT_DIR / "data" / "persona_results"
+DEFAULT_OUTPUT_DIR = ROOT_DIR / "data" / "persona_eval_data"
+# Keep output folder names aligned with existing shuffled-results dirs.
+OUTPUT_SUFFIX_ALIASES = {"llama3_70b": "llama70b"}
 RANDOM_SEED = 42
 FILENAME_RE = re.compile(r"^([A-Z]+)_(\d+)_fold(\d+)\.jsonl$")
+
+
+def label_dir_suffix(label_dir: Path) -> str:
+    return label_dir.name.removeprefix("persona_labels_")
+
+
+def eval_output_dir_for_labels(label_dir: Path) -> Path:
+    suffix = OUTPUT_SUFFIX_ALIASES.get(label_dir_suffix(label_dir), label_dir_suffix(label_dir))
+    return PERSONA_TAILOR_DIR / f"persona_eval_data_{suffix}"
+
+
+def discover_model_label_dirs() -> list[Path]:
+    label_dirs = []
+    for path in sorted(PERSONA_TAILOR_DIR.glob("persona_labels_*")):
+        if path.is_dir() and list(path.glob("*.jsonl")):
+            label_dirs.append(path)
+    return label_dirs
 
 
 def map_label(value):
@@ -76,16 +97,51 @@ def write_json(path, records):
     )
 
 
-def main():
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Build persona_eval_data train/test splits from ICM-labeled jsonl files."
+    )
+    parser.add_argument(
+        "--input-dir",
+        type=Path,
+        default=DEFAULT_INPUT_DIR,
+        help="Directory containing <PERSONA>_<SIZE>_fold<K>.jsonl label files.",
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=None,
+        help="Directory to write processed persona eval JSON files.",
+    )
+    parser.add_argument(
+        "--all-persona-tailor",
+        action="store_true",
+        help=(
+            "Process every Persona_Tailor/persona_labels_* folder that contains "
+            "*.jsonl files, writing to matching persona_eval_data_* folders."
+        ),
+    )
+    return parser.parse_args()
+
+
+def main(input_dir=DEFAULT_INPUT_DIR, output_dir=None):
+    input_dir = Path(input_dir)
+    if output_dir is None:
+        if input_dir.parent == PERSONA_TAILOR_DIR and input_dir.name.startswith("persona_labels_"):
+            output_dir = eval_output_dir_for_labels(input_dir)
+        else:
+            output_dir = DEFAULT_OUTPUT_DIR
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    print(f"[gen] {input_dir.name} -> {output_dir}")
 
     grouped_rows = defaultdict(dict)
-    for path in sorted(INPUT_DIR.glob("*.jsonl")):
+    for path in sorted(input_dir.glob("*.jsonl")):
         persona, fold = parse_filename(path)
         grouped_rows[persona][fold] = load_jsonl(path)
 
     if not grouped_rows:
-        raise FileNotFoundError(f"No persona result files found in {INPUT_DIR}")
+        raise FileNotFoundError(f"No persona result files found in {input_dir}")
 
     for persona, fold_rows in sorted(grouped_rows.items()):
         folds = sorted(fold_rows)
@@ -125,12 +181,12 @@ def main():
                 f"{RANDOM_SEED}:{persona}:fold{held_out_fold}:train_gold",
             )
 
-            test_path = OUTPUT_DIR / f"{persona}_fold{held_out_fold}_test_persona.json"
+            test_path = output_dir / f"{persona}_fold{held_out_fold}_test_persona.json"
             train_icm_path = (
-                OUTPUT_DIR / f"{persona}_fold{held_out_fold}_train_icm_persona.json"
+                output_dir / f"{persona}_fold{held_out_fold}_train_icm_persona.json"
             )
             train_gold_path = (
-                OUTPUT_DIR / f"{persona}_fold{held_out_fold}_train_gold_persona.json"
+                output_dir / f"{persona}_fold{held_out_fold}_train_gold_persona.json"
             )
 
             write_json(test_path, test_records)
@@ -145,5 +201,19 @@ def main():
             )
 
 
+def main_all_persona_tailor():
+    label_dirs = discover_model_label_dirs()
+    if not label_dirs:
+        raise FileNotFoundError(
+            f"No persona_labels_* folders with .jsonl files under {PERSONA_TAILOR_DIR}"
+        )
+    for label_dir in label_dirs:
+        main(label_dir, eval_output_dir_for_labels(label_dir))
+
+
 if __name__ == "__main__":
-    main()
+    args = parse_args()
+    if args.all_persona_tailor:
+        main_all_persona_tailor()
+    else:
+        main(args.input_dir, args.output_dir)
