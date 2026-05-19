@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BASE_URL="http://localhost:8001"
-MODEL="llama70b-gpu1"
-USE_ICM=1
+BASE_URL="http://localhost:8000"
+MODEL="llama70b-gpu0"
+USE_ICM=0
 MODE="icm"
 
 for fold in {1..4}; do

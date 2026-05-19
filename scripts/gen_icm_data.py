@@ -49,6 +49,8 @@ def process_folds():
 
     print(f"找到 {len(all_files)} 个文件，开始处理...")
 
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+
     # 循环处理 Fold 1 到 Fold 4
     for fold_idx in range(1, 5):
         print(f"\n--- 正在处理 Fold {fold_idx} ---")
