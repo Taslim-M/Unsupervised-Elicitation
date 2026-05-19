@@ -92,6 +92,8 @@ def infer_setting(path):
         return "gold", setting
     if setting.startswith("icm_few"):
         return "icm", setting
+    if setting.startswith("perturbed_few"):
+        return "perturbed", setting
     return "other", setting
 
 
@@ -177,7 +179,7 @@ def summarize_many(paths):
     print(f"Files: {len(paths)}")
     print("")
 
-    family_order = ["base", "instruct", "gold", "icm", "other"]
+    family_order = ["base", "instruct", "gold", "icm", "perturbed", "other"]
     for family in family_order:
         if family not in family_buckets:
             continue
