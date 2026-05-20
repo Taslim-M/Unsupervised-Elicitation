@@ -15,8 +15,8 @@ Pakistan_28_part1.json Pakistan_28_part2.json Pakistan_28_part3.json Pakistan_28
 Russia_28_part1.json Russia_28_part2.json Russia_28_part3.json Russia_28_part4.json 
 Turkey_28_part1.json Turkey_28_part2.json Turkey_28_part3.json Turkey_28_part4.json)
 
-
-
+files=(Democrat-Liberal_10_train.json Independent-Conservative_8_train.json Independent-Liberal_6_train.json
+ Republican-Conservative_10_train.json Republican-Liberal_6_train.json)
 total=${#files[@]}
 
 for config in "70 4" "40 8" "50 8" "70 8"; do
